@@ -1,0 +1,32 @@
+[
+  {
+    "cve_id": "CVE-2023-0001",
+    "product_name": "nginx",
+    "vendor_name": "NGINX",
+    "affected_version_start": "1.16.0",
+    "affected_version_end": "1.18.0",
+    "severity": "high",
+    "summary": "Example vulnerability affecting nginx from 1.16.0 to 1.18.0.",
+    "reference_url": "https://example.com/CVE-2023-0001"
+  },
+  {
+    "cve_id": "CVE-2023-0002",
+    "product_name": "nginx",
+    "vendor_name": "NGINX",
+    "affected_version_start": "1.19.0",
+    "affected_version_end": "1.19.2",
+    "severity": "medium",
+    "summary": "Example vulnerability affecting nginx from 1.19.0 to 1.19.2.",
+    "reference_url": "https://example.com/CVE-2023-0002"
+  },
+  {
+    "cve_id": "CVE-2023-0003",
+    "product_name": "apache",
+    "vendor_name": "Apache",
+    "affected_version_start": "2.4.0",
+    "affected_version_end": "2.4.48",
+    "severity": "critical",
+    "summary": "Example vulnerability affecting Apache HTTP Server.",
+    "reference_url": "https://example.com/CVE-2023-0003"
+  }
+]
