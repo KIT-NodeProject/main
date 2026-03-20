@@ -6,6 +6,27 @@
 
 이 문서의 명령은 `backend/` 디렉터리에서 실행하는 것을 기준으로 합니다. 저장소 루트에서 시작했다면 먼저 `cd backend` 후 진행하면 됩니다.
 
+## 빠른 시작
+
+처음 실행해보는 경우에는 아래 순서만 따라가면 됩니다.
+
+```bash
+cd backend
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+docker compose up -d
+cp .env.example .env
+alembic upgrade head
+python -m app.seeds.load_cve_seed
+uvicorn app.main:app --reload
+```
+
+정상적으로 실행되면 아래 주소에서 바로 확인할 수 있습니다.
+
+- API 상태 확인: `http://127.0.0.1:8000/health`
+- Swagger UI: `http://127.0.0.1:8000/docs`
+
 ## 프로젝트 범위
 
 - `base_url`과 기술 스택 정보를 포함한 스캔 대상 생성
@@ -29,6 +50,12 @@
 - Alembic
 - PostgreSQL 16
 - Pydantic
+
+## 시작 전에 확인할 것
+
+- Docker가 실행 중이어야 합니다.
+- Python 3.11이 설치되어 있어야 합니다.
+- 기본 포트는 PostgreSQL `5432`, API 서버 `8000`을 사용합니다.
 
 ## 동작 흐름
 
@@ -59,6 +86,12 @@ docker compose up -d
 DATABASE_URL=postgresql+psycopg://cve_user:cve_password@localhost:5432/cve_db
 ```
 
+또는 예시 파일을 그대로 복사해도 됩니다.
+
+```bash
+cp .env.example .env
+```
+
 ### 3. 의존성 설치
 
 ```bash
@@ -86,6 +119,9 @@ uvicorn app.main:app --reload
 ```
 
 서버는 `http://127.0.0.1:8000`에서 확인할 수 있습니다.
+
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
 
 ## 사용 예시
 
@@ -155,6 +191,13 @@ curl http://127.0.0.1:8000/targets/1/results
 ```bash
 python -m unittest tests/test_backend_cleanup.py
 ```
+
+## 자주 겪는 문제
+
+- `connection to server at "localhost", port 5432 failed`
+  PostgreSQL이 아직 올라오지 않았거나 `.env`의 `DATABASE_URL`이 현재 Docker 설정과 다를 때 발생합니다. `docker compose up -d` 상태와 `.env` 값을 함께 확인하세요.
+- 시드 적재 결과가 `Inserted: 0`, `Skipped: N`
+  실패가 아니라 이미 같은 CVE 시드 데이터가 들어 있다는 뜻입니다. 그대로 진행해도 됩니다.
 
 ## 디렉터리 구조
 
