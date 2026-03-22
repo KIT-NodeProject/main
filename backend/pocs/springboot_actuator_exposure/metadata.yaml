@@ -1,0 +1,11 @@
+# Spring Boot 2.x 대역에 대해 동작하는 샘플 PoC 메타데이터다.
+name: springboot_actuator_exposure
+category: Misconfiguration
+stack_name: Spring Boot
+# 버전 조건은 packaging specifier 문법을 따른다.
+version_rules:
+  - ">=2.0.0,<3.0.0"
+severity: Medium
+entrypoint: runner.py
+timeout_seconds: 10
+description: Prototype probe that checks whether the Spring Boot actuator endpoint is reachable without authentication.

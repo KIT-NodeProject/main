@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Scan Report #{{ scan_run.scan_run_id }}</title>
+    <style>
+        :root {
+            --bg: #f3efe6;
+            --surface: rgba(255, 251, 245, 0.9);
+            --surface-strong: #fffaf2;
+            --ink: #1e1d1a;
+            --muted: #5f5a51;
+            --line: rgba(43, 34, 17, 0.12);
+            --accent: #0f766e;
+            --danger: #b42318;
+            --warning: #b54708;
+            --success: #027a48;
+            --shadow: 0 18px 50px rgba(64, 45, 16, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "IBM Plex Sans KR", "Pretendard", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(15, 118, 110, 0.15), transparent 30%),
+                radial-gradient(circle at top right, rgba(181, 71, 8, 0.18), transparent 28%),
+                linear-gradient(180deg, #f7f3eb 0%, #efe5d6 100%);
+        }
+
+        .page {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        .hero {
+            padding: 28px;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+        }
+
+        .eyebrow {
+            margin: 0;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        h1 {
+            margin: 10px 0 12px;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.04;
+        }
+
+        .subtext {
+            margin: 0;
+            color: var(--muted);
+            max-width: 760px;
+        }
+
+        .meta-grid,
+        .summary-grid,
+        .result-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .meta-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            margin-top: 24px;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            margin: 24px 0 32px;
+        }
+
+        .result-grid {
+            margin-top: 20px;
+        }
+
+        .card,
+        .result-card {
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: var(--surface-strong);
+            box-shadow: var(--shadow);
+        }
+
+        .card {
+            padding: 18px;
+        }
+
+        .card-label {
+            margin: 0 0 8px;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .card-value {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .section {
+            margin-top: 28px;
+        }
+
+        .section h2 {
+            margin: 0 0 14px;
+            font-size: 1.35rem;
+        }
+
+        .result-card {
+            padding: 22px;
+        }
+
+        .result-header {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .result-title {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            background: rgba(15, 118, 110, 0.1);
+            color: var(--accent);
+        }
+
+        .badge.found {
+            background: rgba(180, 35, 24, 0.12);
+            color: var(--danger);
+        }
+
+        .badge.failed {
+            background: rgba(181, 71, 8, 0.12);
+            color: var(--warning);
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 10px 14px;
+            margin: 0;
+        }
+
+        dt {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        dd {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        pre {
+            margin: 0;
+            padding: 14px;
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid rgba(30, 29, 26, 0.08);
+            background: #f7f0e3;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+
+        .empty {
+            padding: 18px;
+            border: 1px dashed var(--line);
+            border-radius: 18px;
+            color: var(--muted);
+            background: rgba(255, 250, 242, 0.76);
+        }
+
+        @media (max-width: 680px) {
+            .page {
+                padding: 28px 16px 40px;
+            }
+
+            dl {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <!-- 리포트 상단의 기본 정보와 상태를 보여주는 영역 -->
+        <section class="hero">
+            <p class="eyebrow">Security Scanner Report</p>
+            <h1>Scan #{{ scan_run.scan_run_id }} 결과 리포트</h1>
+            <p class="subtext">
+                입력값 기반 PoC 실행 결과를 요약한 프로토타입 리포트입니다.
+                생성 시각: {{ generated_at }}
+            </p>
+
+            <div class="meta-grid">
+                <article class="card">
+                    <p class="card-label">대상 URL</p>
+                    <p class="card-value">{{ target.base_url }}</p>
+                </article>
+                <article class="card">
+                    <p class="card-label">스택</p>
+                    <p class="card-value">{{ stack.stack_name }} {{ stack.version or "-" }}</p>
+                </article>
+                <article class="card">
+                    <p class="card-label">상태</p>
+                    <p class="card-value">{{ scan_run.status }}</p>
+                </article>
+                <article class="card">
+                    <p class="card-label">실행 시간</p>
+                    <p class="card-value">{{ scan_run.started_at | datetime }}</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 전체 진행 상황을 숫자로 요약하는 영역 -->
+        <section class="section">
+            <h2>요약</h2>
+            <div class="summary-grid">
+                <article class="card">
+                    <p class="card-label">총 PoC 수</p>
+                    <p class="card-value">{{ summary.total_pocs }}</p>
+                </article>
+                <article class="card">
+                    <p class="card-label">완료된 PoC</p>
+                    <p class="card-value">{{ summary.completed_pocs }}</p>
+                </article>
+                <article class="card">
+                    <p class="card-label">발견 취약점</p>
+                    <p class="card-value">{{ summary.vulnerabilities_found }}</p>
+                </article>
+                <article class="card">
+                    <p class="card-label">실패/예외</p>
+                    <p class="card-value">{{ summary.failed_pocs }}</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 실제로 발견된 항목만 따로 모아 보여주는 영역 -->
+        <section class="section">
+            <h2>발견된 취약점</h2>
+            {% if vulnerabilities %}
+            <div class="result-grid">
+                {% for result in vulnerabilities %}
+                <article class="result-card">
+                    <div class="result-header">
+                        <h3 class="result-title">{{ result.poc_name or result.vuln_category }}</h3>
+                        <span class="badge found">{{ result.severity }} / {{ result.status }}</span>
+                    </div>
+                    <dl>
+                        <dt>분류</dt>
+                        <dd>{{ result.vuln_category }}</dd>
+                        <dt>CVE ID</dt>
+                        <dd>{{ result.cve_id or "-" }}</dd>
+                        <dt>설명</dt>
+                        <dd>{{ result.description or "-" }}</dd>
+                        <dt>근거</dt>
+                        <dd>{{ result.evidence or "-" }}</dd>
+                    </dl>
+                    {% if result.raw_output %}
+                    <div style="margin-top: 16px;">
+                        <p class="card-label">원본 출력</p>
+                        <pre>{{ result.raw_output }}</pre>
+                    </div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty">발견된 취약점이 없습니다.</div>
+            {% endif %}
+        </section>
+
+        <!-- 발견 여부와 관계없이 모든 실행 결과를 나열하는 영역 -->
+        <section class="section">
+            <h2>전체 실행 결과</h2>
+            {% if scan_run.results %}
+            <div class="result-grid">
+                {% for result in scan_run.results %}
+                <article class="result-card">
+                    <div class="result-header">
+                        <h3 class="result-title">{{ result.poc_name or result.vuln_category }}</h3>
+                        <span class="badge {% if result.status == 'Found' %}found{% elif result.status in ['Timeout', 'Error', 'Failed'] %}failed{% endif %}">
+                            {{ result.severity }} / {{ result.status }}
+                        </span>
+                    </div>
+                    <dl>
+                        <dt>분류</dt>
+                        <dd>{{ result.vuln_category }}</dd>
+                        <dt>설명</dt>
+                        <dd>{{ result.description or "-" }}</dd>
+                        <dt>근거</dt>
+                        <dd>{{ result.evidence or "-" }}</dd>
+                        <dt>생성 시각</dt>
+                        <dd>{{ result.created_at | datetime }}</dd>
+                    </dl>
+                    {% if result.raw_output %}
+                    <div style="margin-top: 16px;">
+                        <p class="card-label">원본 출력</p>
+                        <pre>{{ result.raw_output }}</pre>
+                    </div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty">
+                실행된 PoC 결과가 아직 없습니다. 스택/버전과 일치하는 PoC가 없거나, 작업이 아직 진행 중일 수 있습니다.
+            </div>
+            {% endif %}
+        </section>
+
+        {% if failures %}
+        <!-- 실행 중 오류나 시간 초과가 난 항목을 별도로 보여준다. -->
+        <section class="section">
+            <h2>실패 및 예외 항목</h2>
+            <div class="result-grid">
+                {% for result in failures %}
+                <article class="result-card">
+                    <div class="result-header">
+                        <h3 class="result-title">{{ result.poc_name or result.vuln_category }}</h3>
+                        <span class="badge failed">{{ result.status }}</span>
+                    </div>
+                    <dl>
+                        <dt>설명</dt>
+                        <dd>{{ result.description or "-" }}</dd>
+                        <dt>근거</dt>
+                        <dd>{{ result.evidence or "-" }}</dd>
+                    </dl>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

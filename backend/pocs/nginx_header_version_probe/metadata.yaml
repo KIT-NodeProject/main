@@ -1,0 +1,11 @@
+# Nginx 1.18.x 대역에 대해 동작하는 샘플 PoC 메타데이터다.
+name: nginx_header_version_probe
+category: CVE
+stack_name: Nginx
+# 버전 조건은 packaging specifier 문법을 따른다.
+version_rules:
+  - ">=1.18.0,<1.19.0"
+severity: High
+entrypoint: runner.py
+timeout_seconds: 10
+description: Prototype probe that checks for an exposed nginx Server header on a targeted legacy version range.

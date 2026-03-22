@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.venv/
+backend/scanner.db
+
+# docs 문서는 항상 포함한다.
+!docs/
+!docs/**
