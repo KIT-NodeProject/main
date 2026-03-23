@@ -1,9 +1,15 @@
 import { useState } from "react";
 
+type StackInfo = {
+  stackName: string;
+  stackVersion: string;
+};
+
 type Props = {
   url: string;
   initialEndpoints: string[];
-  onNext: (endpoints: string[]) => void;
+  initialStackInfo: StackInfo;
+  onNext: (endpoints: string[], stackInfo: StackInfo) => void;
   onPrev: () => void;
 };
 
@@ -34,7 +40,8 @@ function normalizeEndpoint(
     if (base.origin !== endpointUrl.origin) {
       return {
         isValid: false,
-        message: "엔드포인트는 입력한 사이트와 같은 도메인만 사용할 수 있습니다.",
+        message:
+          "엔드포인트는 입력한 사이트와 같은 도메인만 사용할 수 있습니다.",
       };
     }
 
@@ -50,16 +57,28 @@ function normalizeEndpoint(
   }
 }
 
-function InputPage({ url, initialEndpoints, onNext, onPrev }: Props) {
+function InputPage({
+  url,
+  initialEndpoints,
+  initialStackInfo,
+  onNext,
+  onPrev,
+}: Props) {
   const [endpointInputs, setEndpointInputs] = useState(() => {
     const nextInputs = [...EMPTY_ENDPOINTS];
 
-    initialEndpoints.slice(0, EMPTY_ENDPOINTS.length).forEach((endpoint, index) => {
-      nextInputs[index] = endpoint;
-    });
+    initialEndpoints
+      .slice(0, EMPTY_ENDPOINTS.length)
+      .forEach((endpoint, index) => {
+        nextInputs[index] = endpoint;
+      });
 
     return nextInputs;
   });
+  const [stackName, setStackName] = useState(initialStackInfo.stackName);
+  const [stackVersion, setStackVersion] = useState(
+    initialStackInfo.stackVersion,
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleEndpointChange = (index: number, value: string) => {
@@ -68,6 +87,22 @@ function InputPage({ url, initialEndpoints, onNext, onPrev }: Props) {
       next[index] = value;
       return next;
     });
+
+    if (errorMessage) {
+      setErrorMessage("");
+    }
+  };
+
+  const handleStackNameChange = (value: string) => {
+    setStackName(value);
+
+    if (errorMessage) {
+      setErrorMessage("");
+    }
+  };
+
+  const handleStackVersionChange = (value: string) => {
+    setStackVersion(value);
 
     if (errorMessage) {
       setErrorMessage("");
@@ -96,35 +131,69 @@ function InputPage({ url, initialEndpoints, onNext, onPrev }: Props) {
     }
 
     setErrorMessage("");
-    onNext(normalizedEndpoints);
+    onNext(normalizedEndpoints, {
+      stackName: stackName.trim(),
+      stackVersion: stackVersion.trim(),
+    });
   };
 
   return (
     <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>추가 정보 입력</h2>
+      <h2>대상 정보 입력</h2>
       <p>대상 URL: {url}</p>
-      <div className="inputContainer">
-        <input
-          className="endpoints"
-          placeholder="/admin"
-          value={endpointInputs[0]}
-          onChange={(e) => handleEndpointChange(0, e.target.value)}
-        />
+      <div className="inputEndpoint">
+        <div>
+          엔드포인트 {" : "}
+          <input
+            className="endpoints"
+            placeholder="/admin"
+            value={endpointInputs[0]}
+            onChange={(e) => handleEndpointChange(0, e.target.value)}
+          />
+        </div>
+
+        <div>
+          엔드포인트 {" : "}
+          <input
+            className="endpoints"
+            placeholder="/api/v1/users"
+            value={endpointInputs[1]}
+            onChange={(e) => handleEndpointChange(1, e.target.value)}
+          />
+        </div>
+
+        <div>
+          엔드포인트 {" : "}
+          <input
+            className="endpoints"
+            placeholder="https://example.com/login"
+            value={endpointInputs[2]}
+            onChange={(e) => handleEndpointChange(2, e.target.value)}
+          />
+        </div>
+      </div>
+      <br />
+      <div className="inputStack">
+        <h2>스택 정보 입력</h2>
+        <div>
+          스택 이름{" : "}
+          <input
+            className="stacks"
+            placeholder="React"
+            value={stackName}
+            onChange={(e) => handleStackNameChange(e.target.value)}
+          />
+        </div>
         <br />
-        <input
-          className="endpoints"
-          placeholder="/api/v1/users"
-          value={endpointInputs[1]}
-          onChange={(e) => handleEndpointChange(1, e.target.value)}
-        />
-        <br />
-        <input
-          className="endpoints"
-          placeholder="https://example.com/login"
-          value={endpointInputs[2]}
-          onChange={(e) => handleEndpointChange(2, e.target.value)}
-        />
-        <br />
+        <div>
+          스택 버전{" : "}
+          <input
+            className="stacks"
+            placeholder="19"
+            value={stackVersion}
+            onChange={(e) => handleStackVersionChange(e.target.value)}
+          />
+        </div>
       </div>
       {errorMessage && (
         <p style={{ color: "crimson", marginTop: "12px" }}>{errorMessage}</p>

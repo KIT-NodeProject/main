@@ -4,10 +4,19 @@ import InputPage from "./pages/InputPage";
 
 const STEPS = ["main", "scan", "result"];
 
+type StackInfo = {
+  stackName: string;
+  stackVersion: string;
+};
+
 function App() {
   const [stepIndex, setStepIndex] = useState(0);
   const [url, setUrl] = useState("");
   const [endpoints, setEndpoints] = useState<string[]>([]);
+  const [stackInfo, setStackInfo] = useState<StackInfo>({
+    stackName: "",
+    stackVersion: "",
+  });
 
   const currentStep = STEPS[stepIndex];
 
@@ -24,8 +33,12 @@ function App() {
     handleNext();
   };
 
-  const handleSubmitEndpoints = (nextEndpoints: string[]) => {
+  const handleSubmitScanInfo = (
+    nextEndpoints: string[],
+    nextStackInfo: StackInfo,
+  ) => {
     setEndpoints(nextEndpoints);
+    setStackInfo(nextStackInfo);
     handleNext();
   };
 
@@ -37,7 +50,8 @@ function App() {
         <InputPage
           url={url}
           initialEndpoints={endpoints}
-          onNext={handleSubmitEndpoints}
+          initialStackInfo={stackInfo}
+          onNext={handleSubmitScanInfo}
           onPrev={handlePrev}
         />
       )}
@@ -46,6 +60,10 @@ function App() {
         <div style={{ textAlign: "center", marginTop: "100px" }}>
           <h2>진단 대상 확인</h2>
           <p>입력된 URL: {url}</p>
+          <p style={{ marginTop: "12px" }}>
+            사용 스택: {stackInfo.stackName || "미입력"}
+          </p>
+          <p>스택 버전: {stackInfo.stackVersion || "미입력"}</p>
           <p style={{ marginTop: "12px" }}>입력된 엔드포인트</p>
           <ul style={{ listStyle: "none", padding: 0 }}>
             {endpoints.map((endpoint) => (
