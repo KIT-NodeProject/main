@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: scanner-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: scanner_db
+      MYSQL_USER: scanner
+      MYSQL_PASSWORD: scanner123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: poc-scanner
+    depends_on:
+      - mysql
+    environment:
+      DATABASE_URL: mysql+pymysql://scanner:scanner123@mysql:3306/scanner_db
+    ports:
+      - "8001:8001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: poc-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

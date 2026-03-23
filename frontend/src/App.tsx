@@ -4,10 +4,27 @@ import InputPage from "./pages/InputPage";
 
 const STEPS = ["main", "scan", "result"];
 
+type ScanResult = {
+  scan_id: string;
+  status: string;
+  base_url: string;
+  stack_name: string;
+  results: {
+    poc_name: string;
+    status: string;
+    description: string;
+    evidence: string;
+    raw_output: string;
+    debug_log?: string;
+    vulnerable: boolean;
+  }[];
+};
+
 type StackInfo = {
   stackName: string;
-  stackVersion: string;
+  scanResult?: ScanResult;
 };
+
 
 function App() {
   const [stepIndex, setStepIndex] = useState(0);
@@ -15,7 +32,7 @@ function App() {
   const [endpoints, setEndpoints] = useState<string[]>([]);
   const [stackInfo, setStackInfo] = useState<StackInfo>({
     stackName: "",
-    stackVersion: "",
+    // stackVersion: "",
   });
 
   const currentStep = STEPS[stepIndex];
@@ -58,18 +75,37 @@ function App() {
 
       {currentStep === "result" && (
         <div style={{ textAlign: "center", marginTop: "100px" }}>
-          <h2>진단 대상 확인</h2>
+          <h2>진단 결과</h2>
           <p>입력된 URL: {url}</p>
           <p style={{ marginTop: "12px" }}>
             사용 스택: {stackInfo.stackName || "미입력"}
           </p>
-          <p>스택 버전: {stackInfo.stackVersion || "미입력"}</p>
+
           <p style={{ marginTop: "12px" }}>입력된 엔드포인트</p>
           <ul style={{ listStyle: "none", padding: 0 }}>
             {endpoints.map((endpoint) => (
               <li key={endpoint}>{endpoint}</li>
             ))}
           </ul>
+
+          <div style={{ marginTop: "24px" }}>
+            <h3>스캔 응답 JSON</h3>
+            <pre
+              style={{
+                textAlign: "left",
+                backgroundColor: "#f5f5f5",
+                padding: "16px",
+                borderRadius: "8px",
+                overflowX: "auto",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {stackInfo.scanResult
+                ? JSON.stringify(stackInfo.scanResult, null, 2)
+                : "스캔 결과가 없습니다."}
+            </pre>
+          </div>
         </div>
       )}
     </>

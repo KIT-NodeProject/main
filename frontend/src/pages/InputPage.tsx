@@ -1,8 +1,25 @@
 import { useState } from "react";
 
+type ScanResult = {
+  scan_id: string;
+  status: string;
+  base_url: string;
+  stack_name: string;
+  results: {
+    poc_name: string;
+    status: string;
+    description: string;
+    evidence: string;
+    raw_output: string;
+    debug_log?: string;
+    vulnerable: boolean;
+  }[];
+};
+
 type StackInfo = {
   stackName: string;
-  stackVersion: string;
+  scanResult?: ScanResult;
+  //stackVersion: string;
 };
 
 type Props = {
@@ -76,9 +93,9 @@ function InputPage({
     return nextInputs;
   });
   const [stackName, setStackName] = useState(initialStackInfo.stackName);
-  const [stackVersion, setStackVersion] = useState(
-    initialStackInfo.stackVersion,
-  );
+  // const [stackVersion, setStackVersion] = useState(
+  //   initialStackInfo.stackVersion,
+  // );
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleEndpointChange = (index: number, value: string) => {
@@ -101,15 +118,15 @@ function InputPage({
     }
   };
 
-  const handleStackVersionChange = (value: string) => {
-    setStackVersion(value);
+  // const handleStackVersionChange = (value: string) => {
+  //   setStackVersion(value);
 
-    if (errorMessage) {
-      setErrorMessage("");
-    }
-  };
+  //   if (errorMessage) {
+  //     setErrorMessage("");
+  //   }
+  // };
 
-  const handleNextClick = () => {
+  const handleNextClick = async () => {
     const normalizedEndpoints: string[] = [];
 
     for (const endpoint of endpointInputs) {
@@ -131,10 +148,35 @@ function InputPage({
     }
 
     setErrorMessage("");
+    try {
+      const response = await fetch("/api/v1/scans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          base_url: url,
+          stack_name: stackName.trim(),
+          endpoints: normalizedEndpoints,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("스캔 요청에 실패했습니다.");
+    }
+
+    const data = await response.json();
+
+    console.log("스캔 결과:", data);
+
     onNext(normalizedEndpoints, {
       stackName: stackName.trim(),
-      stackVersion: stackVersion.trim(),
+      scanResult: data,
     });
+   } catch (error) {
+      console.error(error);
+      setErrorMessage("백엔드 요청 중 오류가 발생했습니다.");
+   }
   };
 
   return (
@@ -185,7 +227,7 @@ function InputPage({
           />
         </div>
         <br />
-        <div>
+        {/* <div>
           스택 버전{" : "}
           <input
             className="stacks"
@@ -193,7 +235,7 @@ function InputPage({
             value={stackVersion}
             onChange={(e) => handleStackVersionChange(e.target.value)}
           />
-        </div>
+        </div> */}
       </div>
       {errorMessage && (
         <p style={{ color: "crimson", marginTop: "12px" }}>{errorMessage}</p>
