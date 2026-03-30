@@ -9,6 +9,15 @@ from .services.scan_service import create_and_run_scan, get_scan_by_id
 app = FastAPI(title="PoC Scanner")
 
 
+def serialize_endpoint(endpoint):
+    return {
+        "id": endpoint.id,
+        "path": endpoint.path,
+        "method": endpoint.method,
+        "endpoint_type": endpoint.endpoint_type,
+    }
+
+
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
@@ -25,6 +34,7 @@ def create_scan(payload: ScanCreateRequest, db: Session = Depends(get_db)):
         db=db,
         base_url=str(payload.base_url),
         stack_name=payload.stack_name,
+        endpoints=[endpoint.model_dump() for endpoint in payload.endpoints],
     )
 
     results = [
@@ -34,16 +44,19 @@ def create_scan(payload: ScanCreateRequest, db: Session = Depends(get_db)):
             "description": r.description,
             "evidence": r.evidence,
             "raw_output": r.raw_output,
+            "debug_log": None,
             "vulnerable": r.vulnerable,
         }
         for r in scan_run.results
     ]
+    endpoints = [serialize_endpoint(endpoint) for endpoint in scan_run.endpoints]
 
     return ScanCreateResponse(
         scan_id=scan_run.id,
         status=scan_run.status,
         base_url=scan_run.base_url,
         stack_name=scan_run.stack_name,
+        endpoints=endpoints,
         results=results,
     )
 
@@ -61,16 +74,19 @@ def read_scan(scan_id: str, db: Session = Depends(get_db)):
             "description": r.description,
             "evidence": r.evidence,
             "raw_output": r.raw_output,
+            "debug_log": None,
             "vulnerable": r.vulnerable,
         }
         for r in scan_run.results
     ]
+    endpoints = [serialize_endpoint(endpoint) for endpoint in scan_run.endpoints]
 
     return ScanReadResponse(
         scan_id=scan_run.id,
         status=scan_run.status,
         base_url=scan_run.base_url,
         stack_name=scan_run.stack_name,
+        endpoints=endpoints,
         results=results,
     )
 
@@ -86,6 +102,7 @@ def read_scan_report(scan_id: str, db: Session = Depends(get_db)):
         "base_url": scan_run.base_url,
         "stack_name": scan_run.stack_name,
         "status": scan_run.status,
+        "endpoints": [serialize_endpoint(endpoint) for endpoint in scan_run.endpoints],
         "results": [
             {
                 "poc_name": r.poc_name,
@@ -93,6 +110,7 @@ def read_scan_report(scan_id: str, db: Session = Depends(get_db)):
                 "description": r.description,
                 "evidence": r.evidence,
                 "raw_output": r.raw_output,
+                "debug_log": None,
                 "vulnerable": r.vulnerable,
             }
             for r in scan_run.results

@@ -15,7 +15,22 @@ class ScanRun(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="Pending")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    endpoints = relationship("ScanEndpoint", back_populates="scan_run", cascade="all, delete-orphan")
     results = relationship("ScanResult", back_populates="scan_run", cascade="all, delete-orphan")
+
+
+class ScanEndpoint(Base):
+    __tablename__ = "scan_endpoints"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    scan_run_id: Mapped[str] = mapped_column(String(36), ForeignKey("scan_runs.id"), nullable=False, index=True)
+
+    path: Mapped[str] = mapped_column(String(2048), nullable=False)
+    method: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    endpoint_type: Mapped[str] = mapped_column(String(50), nullable=False, default="public")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    scan_run = relationship("ScanRun", back_populates="endpoints")
 
 
 class ScanResult(Base):
