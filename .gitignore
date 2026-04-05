@@ -12,3 +12,5 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+PROMPTS.md
+PROJECT_INFO.md
