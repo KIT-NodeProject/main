@@ -1,0 +1,14 @@
+category: injection
+display_name: Injection
+description: Injection related endpoint tests
+pocs:
+  - name: sql_error_based
+    entrypoint: sql_error_based.py
+    method: post
+    requires_query_params: true
+    requires_body_params: false
+  - name: sql_boolean_based
+    entrypoint: sql_boolean_based.py
+    method: GET
+    requires_query_params: true
+    requires_body_params: false

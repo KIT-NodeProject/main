@@ -149,7 +149,7 @@ function InputPage({
 
     setErrorMessage("");
     try {
-      const response = await fetch("/api/v1/scans", {
+      const response = await fetch("/api/v1/stack/scans", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
