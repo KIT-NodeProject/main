@@ -1,14 +1,21 @@
-category: injection
-display_name: Injection
-description: Injection related endpoint tests
+category: accepts_invalid_token
+display_name: accepts_invalid_token
+description: accepts_invalid_token related endpoint tests
 pocs:
-  - name: sql_error_based
-    entrypoint: sql_error_based.py
-    method: post
-    requires_query_params: true
-    requires_body_params: false
-  - name: sql_boolean_based
-    entrypoint: sql_boolean_based.py
+  - name: missing_auth_on_protected_endpoint
+    entrypoint: missing_auth_on_protected_endpoint.py
     method: GET
-    requires_query_params: true
+    requires_query_params: false
     requires_body_params: false
+
+  - name: accepts_invalid_token
+    entrypoint: accepts_invalid_token.py
+    method: GET
+    requires_query_params: false
+    requires_body_params: false
+
+  - name: no_login_rate_limit
+    entrypoint: no_login_rate_limit.py
+    method: POST
+    requires_query_params: false
+    requires_body_params: true

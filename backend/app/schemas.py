@@ -3,7 +3,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
-EndpointType = Literal["public", "login_required", "login_page"]
+EndpointType = Literal["public", "login_required"]
 SupportedMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 
 

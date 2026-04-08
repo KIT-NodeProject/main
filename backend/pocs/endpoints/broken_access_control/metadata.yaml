@@ -7,6 +7,7 @@ pocs:
     method: GET
     requires_query_params: true
     requires_body_params: false
+    
   - name: sql_boolean_based
     entrypoint: sql_boolean_based.py
     method: GET
