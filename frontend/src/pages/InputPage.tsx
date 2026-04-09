@@ -216,9 +216,9 @@ function InputPage({
       </div>
       <br />
       <div className="inputStack">
-        <h2>스택 정보 입력</h2>
+        <h2>사용 기술 / 프레임 워크 정보 입력</h2>
         <div>
-          스택 이름{" : "}
+          사용 기술 / 프레임 워크 이름{" : "}
           <input
             className="stacks"
             placeholder="React"

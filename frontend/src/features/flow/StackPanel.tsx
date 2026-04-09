@@ -16,7 +16,7 @@ function StackPanel({ stack, errorMessage, onPatch }: Props) {
               Enter stack information
             </p>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-slate-950">
-              스택 정보 입력
+              사용 기술 / 프레임 워크 정보 입력
             </h2>
           </div>
         </div>

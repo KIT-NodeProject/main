@@ -42,8 +42,8 @@ function RunPage() {
     if (hasStackScan) {
       steps.push({
         id: "stack",
-        label: "기술 스택 분석",
-        description: `${stack.stackName.trim()} 기준으로 스택 검사를 실행합니다.`,
+        label: "사용 기술 / 프레임 워크",
+        description: `${stack.stackName.trim()} 기준으로 사용 기술 / 프레임 워크 검사를 실행합니다.`,
       });
     }
 
@@ -64,7 +64,7 @@ function RunPage() {
 
   const validate = () => {
     if (!hasEndpointScan && !hasStackScan) {
-      return "스택 이름을 입력하거나 엔드포인트 경로를 하나 이상 입력해야 합니다.";
+      return "사용 기술 / 프레임 워크 이름을 입력하거나 엔드포인트 경로를 하나 이상 입력해야 합니다.";
     }
 
     for (const [index, request] of configuredEndpointRequests.entries()) {
@@ -139,7 +139,7 @@ function RunPage() {
         });
 
         if (!stackResponse.ok) {
-          throw new Error((await stackResponse.text()) || "스택 스캔 요청에 실패했습니다.");
+          throw new Error((await stackResponse.text()) || "사용 기술 / 프레임 워크 스캔 요청에 실패했습니다.");
         }
 
         nextResult.stack_scan = (await stackResponse.json()) as StackScanResponse;

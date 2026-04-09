@@ -16,12 +16,15 @@ type ConfigProps = {
 };
 
 export function ReportConfigPanel({ common, endpointRequests, stack }: ConfigProps) {
+  const configuredRequests = endpointRequests.filter((request) => request.path.trim());
+
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white/88 p-6">
       <div className="border-b border-slate-200 pb-5">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Configured Targets</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950">설정 내용</h2>
       </div>
+
       <div className="mt-5 space-y-4">
         <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
           <p className="text-sm text-slate-600">Base URL</p>
@@ -30,23 +33,44 @@ export function ReportConfigPanel({ common, endpointRequests, stack }: ConfigPro
             로그인: {common.loginRequired ? common.authMode.toUpperCase() : "비로그인"}
           </p>
         </article>
+
         <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-          <p className="text-sm text-slate-600">기술 스택</p>
+          <p className="text-sm text-slate-600">사용 기술 / 프레임 워크</p>
           <p className="mt-2 font-semibold text-slate-950">{stack.stackName || "미입력"}</p>
         </article>
-        {endpointRequests.filter((request) => request.path.trim()).map((request) => (
-          <article key={request.id} className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className={["rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1", methodTone(request.method)].join(" ")}>
-                {request.method}
-              </span>
-              <h3 className="font-semibold text-slate-950">{request.name}</h3>
+
+        {configuredRequests.length > 0 ? (
+          <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
+            <p className="text-sm text-slate-600">엔드포인트 요청</p>
+            <div className="mt-4 space-y-3">
+              {configuredRequests.map((request, index) => (
+                <div
+                  key={request.id}
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
+                      {index + 1}
+                    </span>
+                    <span
+                      className={[
+                        "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                        methodTone(request.method),
+                      ].join(" ")}
+                    >
+                      {request.method}
+                    </span>
+                    <h3 className="font-semibold text-slate-950">{request.name}</h3>
+                  </div>
+
+                  <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
+                    {composeRequestUrl(common.baseUrl, request.path)}
+                  </p>
+                </div>
+              ))}
             </div>
-            <p className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-slate-700">
-              {composeRequestUrl(common.baseUrl, request.path)}
-            </p>
           </article>
-        ))}
+        ) : null}
       </div>
     </section>
   );
@@ -67,6 +91,7 @@ function resultTone(result: ScanResultItem) {
       badge: "대상 접속 실패",
       badgeClass: "bg-amber-100 text-amber-800 ring-amber-200",
       summary: "대상 서비스에 연결되지 않아 테스트를 끝까지 진행하지 못했습니다.",
+      cardClass: "border-amber-200 bg-amber-50/60",
     };
   }
 
@@ -75,6 +100,7 @@ function resultTone(result: ScanResultItem) {
       badge: "취약 징후 발견",
       badgeClass: "bg-rose-100 text-rose-800 ring-rose-200",
       summary: "현재 응답 기준으로 추가 확인이 필요한 징후가 감지되었습니다.",
+      cardClass: "border-rose-200 bg-rose-50/60",
     };
   }
 
@@ -83,6 +109,7 @@ function resultTone(result: ScanResultItem) {
       badge: "검사 완료",
       badgeClass: "bg-emerald-100 text-emerald-800 ring-emerald-200",
       summary: "현재 조건에서는 요청과 결과 수집이 정상적으로 끝났습니다.",
+      cardClass: "border-slate-200 bg-slate-50/80",
     };
   }
 
@@ -91,6 +118,7 @@ function resultTone(result: ScanResultItem) {
       badge: "추가 확인 필요",
       badgeClass: "bg-amber-100 text-amber-800 ring-amber-200",
       summary: "테스트가 완전히 끝나지 않아 확인이 더 필요합니다.",
+      cardClass: "border-amber-200 bg-amber-50/60",
     };
   }
 
@@ -98,105 +126,196 @@ function resultTone(result: ScanResultItem) {
     badge: "검사 완료",
     badgeClass: "bg-sky-100 text-sky-800 ring-sky-200",
     summary: "검사 응답이 수집되었습니다.",
+    cardClass: "border-slate-200 bg-slate-50/80",
   };
 }
 
-function ResultSection({
+function getEndpointSummary(data: EndpointScanResponse) {
+  const endpoint = data.endpoints?.[0];
+
+  if (!endpoint) {
+    return {
+      title: "엔드포인트 정보 없음",
+      subtitle: "응답에 엔드포인트 정보가 포함되지 않았습니다.",
+    };
+  }
+
+  return {
+    title: `${endpoint.method ?? "GET"} ${endpoint.path}`,
+    subtitle: `Endpoint ID: ${endpoint.id} · Type: ${endpoint.endpoint_type}`,
+  };
+}
+
+function ResultItemCard({ result }: { result: ScanResultItem }) {
+  const tone = resultTone(result);
+
+  return (
+    <article className={`rounded-3xl border p-5 ${tone.cardClass}`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <span
+          className={[
+            "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+            tone.badgeClass,
+          ].join(" ")}
+        >
+          {tone.badge}
+        </span>
+        <h4 className="font-semibold text-slate-950">{result.poc_name}</h4>
+      </div>
+
+      <p className="mt-3 text-sm font-medium text-slate-800">{tone.summary}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{result.description || "설명 없음"}</p>
+
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs uppercase tracking-[0.24em] text-slate-500">세부 정보</p>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+          {result.evidence || "추가 정보가 없습니다."}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function SectionShell({
   title,
-  scanId,
-  status,
-  count,
-  results,
+  subtitle,
+  meta,
+  children,
 }: {
   title: string;
-  scanId: string;
-  status: string;
-  count: number;
-  results: ScanResultItem[];
+  subtitle?: string;
+  meta?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white/88 p-6">
       <div className="border-b border-slate-200 pb-5">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Backend Result</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950">{title}</h2>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
-            Scan ID: {scanId}
-          </span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
-            상태: {status === "Completed" ? "검사 완료" : status}
-          </span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
-            Findings: {count}
-          </span>
-        </div>
+        {subtitle ? <p className="mt-2 text-sm text-slate-600">{subtitle}</p> : null}
+        {meta ? <div className="mt-4 flex flex-wrap gap-3">{meta}</div> : null}
       </div>
-      <div className="mt-5 space-y-4">
-        {results.length === 0 ? (
-          <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-600">
-            실행 결과가 없습니다.
-          </article>
-        ) : null}
-        {results.map((result) => {
-          const tone = resultTone(result);
 
-          return (
-            <article key={`${title}-${result.poc_name}-${result.status}-${result.evidence}`} className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className={["rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1", tone.badgeClass].join(" ")}>
-                  {tone.badge}
-                </span>
-                <h3 className="font-semibold text-slate-950">{result.poc_name}</h3>
-              </div>
-              <p className="mt-3 text-sm font-medium text-slate-800">{tone.summary}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{result.description || "설명 없음"}</p>
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">세부 정보</p>
-                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
-                  {result.evidence || "추가 정보가 없습니다."}
-                </p>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      <div className="mt-5">{children}</div>
     </section>
   );
 }
 
 function StackResultSection({ data }: { data: StackScanResponse }) {
   return (
-    <ResultSection
-      title="스택 검사 결과"
-      scanId={data.scan_id}
-      status={data.status}
-      count={data.results.length}
-      results={data.results}
-    />
+    <SectionShell
+      title="사용 기술 / 프레임 워크 검사 결과"
+      subtitle={`${data.stack_name} 기준으로 실행된 결과입니다.`}
+      meta={
+        <>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            Scan ID: {data.scan_id}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            상태: {data.status === "Completed" ? "검사 완료" : data.status}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            Findings: {data.results.length}
+          </span>
+        </>
+      }
+    >
+      {data.results.length === 0 ? (
+        <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-600">
+          실행 결과가 없습니다.
+        </article>
+      ) : (
+        <div className="space-y-4">
+          {data.results.map((result) => (
+            <ResultItemCard
+              key={`${data.scan_id}-${result.poc_name}-${result.status}`}
+              result={result}
+            />
+          ))}
+        </div>
+      )}
+    </SectionShell>
   );
 }
 
-function EndpointResultSection({
+function EndpointResultCard({
   data,
   index,
 }: {
   data: EndpointScanResponse;
   index: number;
 }) {
-  const endpoint = data.endpoints?.[0];
-  const endpointLabel =
-    endpoint && endpoint.path
-      ? `${endpoint.method ?? "GET"} ${endpoint.path}`
-      : `엔드포인트 ${index + 1}`;
+  const summary = getEndpointSummary(data);
 
   return (
-    <ResultSection
-      title={`엔드포인트 검사 결과 ${index + 1} - ${endpointLabel}`}
-      scanId={data.scan_id}
-      status={data.status}
-      count={data.results.length}
-      results={data.results}
-    />
+    <article className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
+              {index + 1}
+            </span>
+            <h3 className="text-lg font-semibold text-slate-950">{summary.title}</h3>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">{summary.subtitle}</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+            Scan ID: {data.scan_id}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+            상태: {data.status === "Completed" ? "검사 완료" : data.status}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+            Findings: {data.results.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        {data.results.length === 0 ? (
+          <article className="rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+            이 엔드포인트에 대한 실행 결과가 없습니다.
+          </article>
+        ) : (
+          <div className="space-y-4">
+            {data.results.map((result) => (
+              <ResultItemCard
+                key={`${data.scan_id}-${result.poc_name}-${result.status}-${result.endpoint_id}`}
+                result={result}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function EndpointResultsSection({ scans }: { scans: EndpointScanResponse[] }) {
+  return (
+    <SectionShell
+      title="엔드포인트 검사 결과"
+      subtitle="각 요청별로 생성된 개별 리포트입니다."
+      meta={
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+          Endpoint Reports: {scans.length}
+        </span>
+      }
+    >
+      {scans.length === 0 ? (
+        <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-600">
+          엔드포인트 검사 결과가 없습니다.
+        </article>
+      ) : (
+        <div className="space-y-5">
+          {scans.map((scan, index) => (
+            <EndpointResultCard key={scan.scan_id} data={scan} index={index} />
+          ))}
+        </div>
+      )}
+    </SectionShell>
   );
 }
 
@@ -208,9 +327,9 @@ export function ReportResultPanel({ scanResult }: ResultProps) {
   return (
     <div className="space-y-6">
       {scanResult.stack_scan ? <StackResultSection data={scanResult.stack_scan} /> : null}
-      {scanResult.endpoint_scans?.map((scan, index) => (
-        <EndpointResultSection key={scan.scan_id} data={scan} index={index} />
-      ))}
+      {scanResult.endpoint_scans ? (
+        <EndpointResultsSection scans={scanResult.endpoint_scans} />
+      ) : null}
     </div>
   );
 }

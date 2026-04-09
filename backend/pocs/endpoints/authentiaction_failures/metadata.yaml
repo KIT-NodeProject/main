@@ -7,11 +7,11 @@ pocs:
     method: GET
     requires_query_params: false
     requires_body_params: false
-  - name: no_login_rate_limit
-    entrypoint: no_login_rate_limit.py
-    method: POST
-    requires_query_params: false
-    requires_body_params: true
+# - name: no_login_rate_limit
+#   entrypoint: no_login_rate_limit.py
+#   method: POST
+#   requires_query_params: false
+#   requires_body_params: true
 # - name: accepts_invalid_token
 #   entrypoint: accepts_invalid_token.py
 #   method: GET

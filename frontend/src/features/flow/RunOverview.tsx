@@ -13,7 +13,7 @@ function RunOverview({ common, stack, endpointCount, hasEndpointScan, hasStackSc
     ["Base URL", common.baseUrl || "-"],
     ["로그인", common.loginRequired ? common.authMode.toUpperCase() : "비로그인"],
     ["엔드포인트", hasEndpointScan ? `${endpointCount} requests` : "실행 안 함"],
-    ["기술 스택", hasStackScan ? stack.stackName : "실행 안 함"],
+    ["사용 기술 / 프레임 워크", hasStackScan ? stack.stackName : "실행 안 함"],
   ];
 
   return (
