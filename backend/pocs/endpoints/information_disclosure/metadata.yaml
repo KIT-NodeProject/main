@@ -1,14 +1,27 @@
-category: injection
-display_name: Injection
-description: Injection related endpoint tests
+category: information_disclosure
+display_name: Information Disclosure
+description: Information disclosure related endpoint tests
 pocs:
-  - name: sql_error_based
-    entrypoint: sql_error_based.py
+  - name: verbose_error_message
+    entrypoint: verbose_error_message.py
     method: GET
     requires_query_params: true
     requires_body_params: false
-  - name: sql_boolean_based
-    entrypoint: sql_boolean_based.py
+
+  - name: sensitive_field_exposure
+    entrypoint: sensitive_field_exposure.py
     method: GET
-    requires_query_params: true
+    requires_query_params: false
     requires_body_params: false
+
+  - name: server_header_disclosure
+    entrypoint: server_header_disclosure.py
+    method: GET
+    requires_query_params: false
+    requires_body_params: false
+
+# - name: path_disclosure
+#     entrypoint: path_disclosure.py
+#     method: GET
+#     requires_query_params: true
+#     requires_body_params: false

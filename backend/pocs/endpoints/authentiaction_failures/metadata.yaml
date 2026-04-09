@@ -1,21 +1,19 @@
-category: accepts_invalid_token
-display_name: accepts_invalid_token
-description: accepts_invalid_token related endpoint tests
+category: authentiaction_failures
+display_name: authentiaction_failures
+description: authentiaction_failures related endpoint tests
 pocs:
   - name: missing_auth_on_protected_endpoint
     entrypoint: missing_auth_on_protected_endpoint.py
     method: GET
     requires_query_params: false
     requires_body_params: false
-
-  - name: accepts_invalid_token
-    entrypoint: accepts_invalid_token.py
-    method: GET
-    requires_query_params: false
-    requires_body_params: false
-
   - name: no_login_rate_limit
     entrypoint: no_login_rate_limit.py
     method: POST
     requires_query_params: false
     requires_body_params: true
+# - name: accepts_invalid_token
+#   entrypoint: accepts_invalid_token.py
+#   method: GET
+#   requires_query_params: false
+#   requires_body_params: false

@@ -1,14 +1,37 @@
-category: injection
-display_name: Injection
-description: Injection related endpoint tests
+category: security_misconfiguration
+display_name: Security Misconfiguration
+description: Security misconfiguration related endpoint tests
 pocs:
-  - name: sql_error_based
-    entrypoint: sql_error_based.py
+  - name: missing_security_headers
+    entrypoint: missing_security_headers.py
     method: GET
-    requires_query_params: true
+    requires_query_params: false
     requires_body_params: false
-  - name: sql_boolean_based
-    entrypoint: sql_boolean_based.py
+
+  - name: swagger_ui_exposed
+    entrypoint: swagger_ui_exposed.py
     method: GET
-    requires_query_params: true
+    requires_query_params: false
     requires_body_params: false
+
+  - name: backup_file_exposed
+    entrypoint: backup_file_exposed.py
+    method: GET
+    requires_query_params: false
+    requires_body_params: false
+
+# - name: admin_interface_exposed
+#   entrypoint: admin_interface_exposed.py
+#   method: GET
+#   requires_query_params: false
+#   requires_body_params: false
+
+# - name: dangerous_http_methods_enabled
+#   entrypoint: dangerous_http_methods_enabled.py
+#   methods:
+#     - OPTIONS
+#     - TRACE
+#     - PUT
+#     - DELETE
+#   requires_query_params: false
+#   requires_body_params: false
