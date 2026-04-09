@@ -35,7 +35,7 @@ function RunPage() {
       steps.push({
         id: "endpoint",
         label: "엔드포인트 분석",
-        description: `${configuredEndpointRequests.length}개 요청 설정을 기준으로 응답을 확인합니다.`,
+        description: `${configuredEndpointRequests.length}개 요청을 각각 개별 스캔으로 실행합니다.`,
       });
     }
 
@@ -77,7 +77,10 @@ function RunPage() {
 
   const handleExecute = async () => {
     const validationMessage = validate();
-    if (validationMessage) return setErrorMessage(validationMessage);
+    if (validationMessage) {
+      setErrorMessage(validationMessage);
+      return;
+    }
 
     setSubmitting(true);
     setErrorMessage("");
@@ -88,6 +91,7 @@ function RunPage() {
     if (progressTimer.current) {
       window.clearInterval(progressTimer.current);
     }
+
     progressTimer.current = window.setInterval(() => {
       setActiveStepIndex((prev) => (prev < runSteps.length - 1 ? prev + 1 : prev));
     }, 900);
@@ -97,20 +101,30 @@ function RunPage() {
       const nextResult: ScanResult = { executed_targets: executedTargets };
 
       if (hasEndpointScan) {
-        const endpointResponse = await fetch("/api/v1/endpoints/scans", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            base_url: common.baseUrl.trim(),
-            endpoints: configuredEndpointRequests.map(serializeEndpointRequest),
-          }),
-        });
+        const endpointScans: EndpointScanResponse[] = [];
 
-        if (!endpointResponse.ok) {
-          throw new Error((await endpointResponse.text()) || "엔드포인트 스캔 요청에 실패했습니다.");
+        for (const request of configuredEndpointRequests) {
+          const endpointResponse = await fetch("/api/v1/endpoints/scans", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              base_url: common.baseUrl.trim(),
+              endpoints: [serializeEndpointRequest(request)],
+            }),
+          });
+
+          if (!endpointResponse.ok) {
+            throw new Error(
+              (await endpointResponse.text()) ||
+                `${request.name || request.path} 엔드포인트 스캔 요청에 실패했습니다.`,
+            );
+          }
+
+          const data = (await endpointResponse.json()) as EndpointScanResponse;
+          endpointScans.push(data);
         }
 
-        nextResult.endpoint_scan = (await endpointResponse.json()) as EndpointScanResponse;
+        nextResult.endpoint_scans = endpointScans;
         executedTargets.push("endpoint");
       }
 
@@ -133,9 +147,11 @@ function RunPage() {
       }
 
       setScanResult(nextResult);
+
       if (progressTimer.current) {
         window.clearInterval(progressTimer.current);
       }
+
       setActiveStepIndex(runSteps.length);
       setCompleted(true);
       window.setTimeout(() => navigate("/report"), 900);

@@ -59,7 +59,7 @@ def create_scan(payload: StackScanCreateRequest, db: Session = Depends(get_db)):
             "raw_output": r.raw_output,
             "vulnerable": r.vulnerable,
         }
-        for r in scan_run.stack_results
+        for r in scan_run.results
     ]
 
     return StackScanCreateResponse(
@@ -86,7 +86,7 @@ def read_scan(scan_id: str, db: Session = Depends(get_db)):
             "raw_output": r.raw_output,
             "vulnerable": r.vulnerable,
         }
-        for r in scan_run.stack_results
+        for r in scan_run.results
     ]
 
     return StackScanReadResponse(
@@ -118,7 +118,7 @@ def read_scan_report(scan_id: str, db: Session = Depends(get_db)):
                 "raw_output": r.raw_output,
                 "vulnerable": r.vulnerable,
             }
-            for r in scan_run.stack_results
+            for r in scan_run.results
         ],
     }
 

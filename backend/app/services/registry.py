@@ -50,7 +50,6 @@ def match_pocs(stack_name: str) -> list[PoCDefinition]:
 
 @dataclass
 class EndPointDefinition:
-    category: str
     name: str
     poc_name: str
     entrypoint_path: Path
@@ -68,15 +67,13 @@ def load_endpoint_pocs() -> list[EndPointDefinition]:
 
     for metadata_path in ENDPOINT_DIR.glob("*/metadata.yaml"):
         with open(metadata_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+            data = yaml.safe_load(f)
 
-        category = data.get("category", metadata_path.parent.name)
-        description = data.get("description", "")
-        poc_items = data.get("pocs", [])
+        category_description = data.get("description", "")
+        pocs = data.get("pocs", [])
 
-        for poc in poc_items:
+        for poc in pocs:
             definition = EndPointDefinition(
-                category=category,
                 name=poc["name"],
                 poc_name=poc["name"],
                 entrypoint_path=metadata_path.parent / poc["entrypoint"],
@@ -84,17 +81,21 @@ def load_endpoint_pocs() -> list[EndPointDefinition]:
                 method=poc.get("method", "GET"),
                 requires_query_params=poc.get("requires_query_params", False),
                 requires_body_params=poc.get("requires_body_params", False),
-                description=description,
+                description=poc.get("description", category_description),
             )
             definitions.append(definition)
 
     return definitions
 
+def normalize_method(value: Any) -> str:
+    if isinstance(value, list):
+        value = value[0] if value else "GET"
+    return str(value or "GET").upper()
 
 def match_endpoint_pocs(endpoint: dict[str, Any]) -> list[EndPointDefinition]:
     definitions = load_endpoint_pocs()
 
-    method = (endpoint.get("method") or "GET").upper()
+    method = normalize_method(endpoint.get("method"))
     endpoint_type = endpoint.get("endpoint_type", "public")
     has_query = bool(endpoint.get("query_params"))
     has_body = bool(endpoint.get("body_params"))
@@ -102,7 +103,7 @@ def match_endpoint_pocs(endpoint: dict[str, Any]) -> list[EndPointDefinition]:
     matched: list[EndPointDefinition] = []
 
     for definition in definitions:
-        if (definition.method or "GET").upper() != method:
+        if normalize_method(definition.method) != method:
             continue
         if definition.entrypoint_type != endpoint_type:
             continue

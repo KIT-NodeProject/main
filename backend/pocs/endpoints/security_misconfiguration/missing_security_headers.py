@@ -15,7 +15,7 @@ def main():
     path = payload.get("path","")
     method = payload.get("method", "GET").upper()
 
-    url = f{base_url}{path}
+    url = f"{base_url}{path}"
 
     print(f"[DEBUG] url={url}", file=sys.stderr)
     print(f"[DEBUG] method={method}", file=sys.stderr)
@@ -30,22 +30,22 @@ def main():
         "X-Content-Type-Options",
         "Strict-Transport-Security",
         "Referrer-Policy",
-        "Permisssions-Policy"
+        "Permissions-Policy"
     ]
 
     try:
         response = requests.request(method=method, url=url, headers=headers, timeout=5, allow_redirects=False,)
 
-        found_header = {}
+        found_headers = {}
         for header_name in security_headers:
             if header_name in response.headers:
-                found_header[header_name] = response.headers.get(header_name, "")
+                found_headers[header_name] = response.headers.get(header_name, "")
 
         if found_headers:
             result = {
                 "poc_name": "missing_security_headers",
                 "status": "Completed",
-                "description": "응답 헤더에서 보안헤더가 있는 것을 확인했습니다.",
+                "description": "점검 대상 보안 헤더가 확인되지 않았습니다.",
                 "evidence": json.dumps(found_headers, ensure_ascii=False),
                 "raw_output": json.dumps(dict(response.headers), ensure_ascii=False)[:500],
                 "vulnerable": False,
@@ -54,7 +54,7 @@ def main():
             result = {
                 "poc_name": "missing_security_headers",
                 "status": "Completed",
-                "description": "보안 헤더가 발견되지 않았습니다. 예방을 위해 보안 헤더를 넣어주세요.",
+                "description": "응답 헤더에서 점검 대상 보안 헤더가 발견되지 않았습니다.",
                 "evidence": f"HTTP {response.status_code}",
                 "raw_output": json.dumps(dict(response.headers), ensure_ascii=False)[:500],
                 "vulnerable": True,

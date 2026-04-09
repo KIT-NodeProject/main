@@ -176,10 +176,22 @@ function StackResultSection({ data }: { data: StackScanResponse }) {
   );
 }
 
-function EndpointResultSection({ data }: { data: EndpointScanResponse }) {
+function EndpointResultSection({
+  data,
+  index,
+}: {
+  data: EndpointScanResponse;
+  index: number;
+}) {
+  const endpoint = data.endpoints?.[0];
+  const endpointLabel =
+    endpoint && endpoint.path
+      ? `${endpoint.method ?? "GET"} ${endpoint.path}`
+      : `엔드포인트 ${index + 1}`;
+
   return (
     <ResultSection
-      title="엔드포인트 검사 결과"
+      title={`엔드포인트 검사 결과 ${index + 1} - ${endpointLabel}`}
       scanId={data.scan_id}
       status={data.status}
       count={data.results.length}
@@ -196,7 +208,9 @@ export function ReportResultPanel({ scanResult }: ResultProps) {
   return (
     <div className="space-y-6">
       {scanResult.stack_scan ? <StackResultSection data={scanResult.stack_scan} /> : null}
-      {scanResult.endpoint_scan ? <EndpointResultSection data={scanResult.endpoint_scan} /> : null}
+      {scanResult.endpoint_scans?.map((scan, index) => (
+        <EndpointResultSection key={scan.scan_id} data={scan} index={index} />
+      ))}
     </div>
   );
 }

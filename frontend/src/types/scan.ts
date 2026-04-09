@@ -38,7 +38,7 @@ export type EndpointScanResponse = {
 export type ScanResult = {
   executed_targets: Array<"stack" | "endpoint">;
   stack_scan?: StackScanResponse;
-  endpoint_scan?: EndpointScanResponse;
+  endpoint_scans?: EndpointScanResponse[];
 };
 
 export type HttpMethod =
