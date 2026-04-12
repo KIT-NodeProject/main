@@ -2,9 +2,11 @@ name: web_poc_scanner
 version: 1.0.0
 description: Web vulnerability scanning PoC set
 supported_stacks:
-  - react_next
-  - spring_boot
-  - django
+  - react
+  - weblogic
+  - spring
+  - next
+  
 categories:
   - authentication_failures
   - broken_access_control

@@ -183,7 +183,6 @@ def read_scan(scan_id: str, db: Session = Depends(get_db)):
         results=results,
     )
 
-
 @app.get("/api/v1/endpoints/scans/{scan_id}/report")
 def read_scan_report(scan_id: str, db: Session = Depends(get_db)):
     scan_run = get_endpoints_scan_by_id(db, scan_id)

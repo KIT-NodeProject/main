@@ -1,0 +1,4 @@
+name: CVE-2025-55182
+stack_name: react
+entrypoint: CVE-2025-55182.py
+description: Simple React test PoC
