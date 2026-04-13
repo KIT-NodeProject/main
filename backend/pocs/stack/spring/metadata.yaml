@@ -1,14 +1,15 @@
-name: CVE-2022-22963
-stack_name: spring
-entrypoint: CVE-2022-22963.py
-description: spring test PoC
+pocs:
+  - name: CVE-2022-22963
+    stack_name: spring
+    entrypoint: CVE-2022-22963.py
+    description: spring test PoC
 
-name: CVE-2022-22965
-stack_name: spring
-entrypoint: CVE-2022-22965.py
-description: spring test PoC
+  - name: CVE-2022-22965
+    stack_name: spring
+    entrypoint: CVE-2022-22965.py
+    description: spring test PoC
 
-name: CVE-2026-22732
-stack_name: spring
-entrypoint: CVE-2026-22732.py
-description: spring test PoC
+  - name: CVE-2026-22732
+    stack_name: spring
+    entrypoint: CVE-2026-22732.py
+    description: spring test PoC

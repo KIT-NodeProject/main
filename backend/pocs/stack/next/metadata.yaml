@@ -1,4 +1,5 @@
-name: CVE-2025-29927
-stack_name: next
-entrypoint: CVE-2025-29927.py
-description: Simple React test PoC
+pocs:
+  - name: CVE-2025-29927
+    stack_name: next
+    entrypoint: CVE-2025-29927.py
+    description: Simple React test PoC

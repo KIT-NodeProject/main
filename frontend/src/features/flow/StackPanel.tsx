@@ -1,5 +1,12 @@
 import type { StackConfig } from "../../types/scan";
 
+const STACK_OPTIONS = [
+  { value: "react", label: "React" },
+  { value: "next", label: "Next.js" },
+  { value: "weblogic", label: "WebLogic" },
+  { value: "spring", label: "Spring" },
+] as const;
+
 type Props = {
   stack: StackConfig;
   errorMessage: string;
@@ -23,12 +30,18 @@ function StackPanel({ stack, errorMessage, onPatch }: Props) {
 
         <label className="space-y-2">
           <span className="text-sm font-medium text-slate-700">stack_name</span>
-          <input
+          <select
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/50"
-            placeholder="React, Django, Node ..."
             value={stack.stackName}
             onChange={(event) => onPatch({ stackName: event.target.value })}
-          />
+          >
+            <option value="">선택 안함</option>
+            {STACK_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         {errorMessage ? (

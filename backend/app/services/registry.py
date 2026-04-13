@@ -26,18 +26,29 @@ def load_pocs() -> list[PoCDefinition]:
 
     for metadata_path in STACK_DIR.glob("*/metadata.yaml"):
         with open(metadata_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+            data = yaml.safe_load(f) or {}
 
-        definition = PoCDefinition(
-            name=data["name"],
-            stack_name=data["stack_name"],
-            entrypoint_path=metadata_path.parent / data["entrypoint"],
-            description=data.get("description", ""),
-        )
-        definitions.append(definition)
+        # 새 형식: pocs 리스트
+        if "pocs" in data:
+            for poc in data["pocs"]:
+                definition = PoCDefinition(
+                    name=poc["name"],
+                    stack_name=poc["stack_name"],
+                    entrypoint_path=metadata_path.parent / poc["entrypoint"],
+                    description=poc.get("description", ""),
+                )
+                definitions.append(definition)
+        else:
+            # 기존 단일 PoC 형식도 호환
+            definition = PoCDefinition(
+                name=data["name"],
+                stack_name=data["stack_name"],
+                entrypoint_path=metadata_path.parent / data["entrypoint"],
+                description=data.get("description", ""),
+            )
+            definitions.append(definition)
 
     return definitions
-
 
 def match_pocs(stack_name: str) -> list[PoCDefinition]:
     matched: list[PoCDefinition] = []
