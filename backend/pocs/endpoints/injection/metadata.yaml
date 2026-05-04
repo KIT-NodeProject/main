@@ -4,18 +4,21 @@ description: Injection related endpoint tests
 pocs: #여러개 poc들을 정리해준다.
   - name: sql_based
     entrypoint: sql_based.py
+    entrypoint_type: public
     method: POST
     requires_query_params: false
     requires_body_params: true
 
   - name: ssti_based
     entrypoint: ssti_based.py
+    entrypoint_type: public
     method: GET
     requires_query_params: true
     requires_body_params: false
 
   - name: xxe_based
     entrypoint: xxe_based.py
+    entrypoint_type: public
     method:
       - POST
       - PUT

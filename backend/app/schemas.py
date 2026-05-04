@@ -6,6 +6,12 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 EndpointType = Literal["public", "login_required"]
 SupportedMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 
+class AuthContextCreate(BaseModel):
+    name: str = "default"
+    auth_type: Literal["cookie", "bearer", "custom_header"] = "cookie"
+    headers: dict[str, str] | None = None
+    cookies: dict[str, str] | None = None
+    description: str = ""
 
 class ScanEndpointCreate(BaseModel):  # 프론트엔드가 보내는 엔드포인트 1개 입력값
     path: str  
@@ -54,6 +60,7 @@ class EndpointScanResultItem(BaseModel):
 class EndpointsScanCreateRequest(BaseModel):  # 프론트엔드가 엔드포인트 스캔 생성 요청 시 보내는 전체 body
     base_url: HttpUrl  
     endpoints: list[ScanEndpointCreate] = Field(min_length=1) 
+    auth: AuthContextCreate | None = None
     
     @field_validator("endpoints", mode="before")
     @classmethod

@@ -22,7 +22,10 @@ function SetupPage() {
       setErrorMessage("Base URL은 http 또는 https로 시작해야 합니다.");
       return;
     }
-    setCommon({ baseUrl: common.baseUrl.trim(), authMode: common.loginRequired ? common.authMode : "none" });
+    setCommon({
+      baseUrl: common.baseUrl.trim(),
+      authMode: common.loginRequired ? common.authMode : "none",
+    }); 
     setErrorMessage("");
     navigate("/endpoint");
   };

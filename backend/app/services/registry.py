@@ -98,15 +98,16 @@ def load_endpoint_pocs() -> list[EndPointDefinition]:
 
     return definitions
 
-def normalize_method(value: Any) -> str:
+def normalize_methods(value: Any) -> set[str]:
     if isinstance(value, list):
-        value = value[0] if value else "GET"
-    return str(value or "GET").upper()
+        return {str(item).upper() for item in value}
+
+    return {str(value or "GET").upper()}
 
 def match_endpoint_pocs(endpoint: dict[str, Any]) -> list[EndPointDefinition]:
     definitions = load_endpoint_pocs()
 
-    method = normalize_method(endpoint.get("method"))
+    method = str(endpoint.get("method") or "GET").upper()
     endpoint_type = endpoint.get("endpoint_type", "public")
     has_query = bool(endpoint.get("query_params"))
     has_body = bool(endpoint.get("body_params"))
@@ -114,7 +115,7 @@ def match_endpoint_pocs(endpoint: dict[str, Any]) -> list[EndPointDefinition]:
     matched: list[EndPointDefinition] = []
 
     for definition in definitions:
-        if normalize_method(definition.method) != method:
+        if method not in normalize_methods(definition.method):
             continue
         if definition.entrypoint_type != endpoint_type:
             continue

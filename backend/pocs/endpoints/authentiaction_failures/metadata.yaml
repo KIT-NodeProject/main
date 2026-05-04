@@ -4,6 +4,7 @@ description: authentiaction_failures related endpoint tests
 pocs:
   - name: missing_auth_on_protected_endpoint
     entrypoint: missing_auth_on_protected_endpoint.py
+    entrypoint_type: public
     method: GET
     requires_query_params: false
     requires_body_params: false

@@ -83,21 +83,6 @@ function EndpointEditor({
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
             Full URL Preview: <span className="font-medium text-slate-950">{composeRequestUrl(baseUrl, request.path)}</span>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => onChange("requiresAuth", !request.requiresAuth)}
-              className={[
-                "rounded-full border px-4 py-2 text-sm transition",
-                request.requiresAuth
-                  ? "border-amber-200 bg-amber-50 text-amber-800"
-                  : "border-slate-200 bg-white text-slate-600",
-              ].join(" ")}
-            >
-              {request.requiresAuth ? "인증 필요" : "인증 불필요"}
-            </button>
-          </div>
         </div>
       </div>
 

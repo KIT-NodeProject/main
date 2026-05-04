@@ -128,6 +128,7 @@ def create_scan(payload: EndpointsScanCreateRequest, db: Session = Depends(get_d
         db=db,
         base_url=str(payload.base_url),
         endpoints=[endpoint.model_dump() for endpoint in payload.endpoints],
+        auth=payload.auth.model_dump() if payload.auth else None,
     )
 
     results = [

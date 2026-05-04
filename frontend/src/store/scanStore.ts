@@ -46,6 +46,8 @@ const initialCommon: CommonConfig = {
   baseUrl: "",
   loginRequired: false,
   authMode: "none",
+  cookieValue: "",
+  authorizationValue: "",
 };
 
 const initialTargets: ScanTargets = {

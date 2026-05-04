@@ -4,18 +4,21 @@ description: Information disclosure related endpoint tests
 pocs:
   - name: verbose_error_message
     entrypoint: verbose_error_message.py
+    entrypoint_type: public
     method: GET
     requires_query_params: true
     requires_body_params: false
 
   - name: sensitive_field_exposure
     entrypoint: sensitive_field_exposure.py
+    entrypoint_type: public
     method: GET
     requires_query_params: false
     requires_body_params: false
 
   - name: server_header_disclosure
     entrypoint: server_header_disclosure.py
+    entrypoint_type: public
     method: GET
     requires_query_params: false
     requires_body_params: false

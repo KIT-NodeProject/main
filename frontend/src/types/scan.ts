@@ -49,18 +49,21 @@ export type HttpMethod =
   | "DELETE"
   | "OPTIONS";
 
-export type AuthMode = "none" | "session" | "bearer" | "basic";
-
 export type ParamDraft = {
   id: string;
   key: string;
   value: string;
 };
 
+export type AuthMode = "none" | "cookie" | "bearer";
+
 export type CommonConfig = {
   baseUrl: string;
   loginRequired: boolean;
   authMode: AuthMode;
+
+  cookieValue: string;
+  authorizationValue: string;
 };
 
 export type ScanTargets = {

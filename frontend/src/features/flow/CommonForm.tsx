@@ -27,12 +27,22 @@ function CommonForm({ common, errorMessage, onPatch, onSubmit }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-700">로그인 상태</p>
-              <p className="text-xs text-slate-500">이후 엔드포인트 요청 기본값으로 연결됩니다.</p>
+              <p className="text-xs text-slate-500">
+                로그인 후 점검이면 Cookie 또는 Authorization 값을 입력합니다.
+              </p>
             </div>
+
             <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1">
               <button
                 type="button"
-                onClick={() => onPatch({ loginRequired: false, authMode: "none" })}
+                onClick={() =>
+                  onPatch({
+                    loginRequired: false,
+                    authMode: "none",
+                    cookieValue: "",
+                    authorizationValue: "",
+                  })
+                }
                 className={[
                   "rounded-full px-4 py-2 text-sm transition",
                   !common.loginRequired
@@ -42,12 +52,13 @@ function CommonForm({ common, errorMessage, onPatch, onSubmit }: Props) {
               >
                 비로그인
               </button>
+
               <button
                 type="button"
                 onClick={() =>
                   onPatch({
                     loginRequired: true,
-                    authMode: common.authMode === "none" ? "session" : common.authMode,
+                    authMode: common.authMode === "none" ? "cookie" : common.authMode,
                   })
                 }
                 className={[
@@ -64,21 +75,47 @@ function CommonForm({ common, errorMessage, onPatch, onSubmit }: Props) {
 
           {common.loginRequired ? (
             <div className="grid gap-4 rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+              <div>
+                <p className="text-sm font-medium text-slate-700">로그인 후 요청 값</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  브라우저 개발자 도구에서 확인한 Cookie 또는 Authorization 값을 넣습니다.
+                </p>
+              </div>
+
               <label className="space-y-2">
-                <span className="text-sm font-medium text-slate-700">인증 방식</span>
-                <select
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/50"
-                  value={common.authMode}
+                <span className="text-sm font-medium text-slate-700">Cookie</span>
+                <textarea
+                  className="min-h-[96px] w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400/50"
+                  placeholder="sessionid=abc123; csrftoken=xyz"
+                  value={common.cookieValue}
                   onChange={(event) =>
-                    onPatch({ authMode: event.target.value as CommonConfig["authMode"] })
+                    onPatch({
+                      cookieValue: event.target.value,
+                      authMode: event.target.value.trim() ? "cookie" : common.authMode,
+                    })
                   }
-                >
-                  {["session", "bearer", "basic"].map((mode) => (
-                    <option key={mode} value={mode}>
-                      {mode}
-                    </option>
-                  ))}
-                </select>
+                />
+                <p className="text-xs text-slate-500">
+                  예: sessionid=abc123; csrftoken=xyz
+                </p>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-slate-700">Authorization</span>
+                <input
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400/50"
+                  placeholder="Bearer eyJ..."
+                  value={common.authorizationValue}
+                  onChange={(event) =>
+                    onPatch({
+                      authorizationValue: event.target.value,
+                      authMode: event.target.value.trim() ? "bearer" : common.authMode,
+                    })
+                  }
+                />
+                <p className="text-xs text-slate-500">
+                  예: Bearer eyJ...
+                </p>
               </label>
             </div>
           ) : null}

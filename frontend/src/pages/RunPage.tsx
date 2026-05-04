@@ -7,6 +7,54 @@ import { normalizeEndpoint, serializeEndpointRequest } from "../lib/request";
 import { useScanStore } from "../store/scanStore";
 import type { EndpointScanResponse, ScanResult, StackScanResponse } from "../types/scan";
 
+function parseCookieHeader(cookieValue: string) {
+  return cookieValue
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .reduce<Record<string, string>>((acc, item) => {
+      const [key, ...rest] = item.split("=");
+
+      if (!key.trim()) {
+        return acc;
+      }
+
+      acc[key.trim()] = rest.join("=").trim();
+      return acc;
+    }, {});
+}
+
+function buildAuthPayload(common: {
+  loginRequired: boolean;
+  cookieValue: string;
+  authorizationValue: string;
+}) {
+  if (!common.loginRequired) {
+    return undefined;
+  }
+
+  const cookies = parseCookieHeader(common.cookieValue);
+  const headers: Record<string, string> = {};
+
+  const authorization = common.authorizationValue.trim();
+
+  if (authorization) {
+    headers.Authorization = authorization;
+  }
+
+  if (Object.keys(cookies).length === 0 && Object.keys(headers).length === 0) {
+    return undefined;
+  }
+
+  return {
+    name: "login session",
+    auth_type: authorization ? "bearer" : "cookie",
+    headers,
+    cookies,
+    description: "프론트에서 입력한 로그인 후 요청 값",
+  };
+}
+
 function RunPage() {
   const navigate = useNavigate();
   const common = useScanStore((state) => state.common);
@@ -109,7 +157,14 @@ function RunPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               base_url: common.baseUrl.trim(),
-              endpoints: [serializeEndpointRequest(request)],
+              auth: buildAuthPayload(common),
+              endpoints: [
+                {
+                  ...serializeEndpointRequest(request),
+                  endpoint_type: common.loginRequired || request.requiresAuth ? "login_required" : "public",
+                  requires_auth: common.loginRequired || request.requiresAuth,
+                },
+              ],
             }),
           });
 

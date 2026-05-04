@@ -54,6 +54,12 @@ class EndpointScanRun(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="Pending")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    auth_context_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("auth_contexts.id"),
+        nullable=True,
+    )
+
     endpoints: Mapped[list["EndpointScanTarget"]] = relationship(
         "EndpointScanTarget",
         back_populates="scan_run",
@@ -65,6 +71,13 @@ class EndpointScanRun(Base):
         back_populates="scan_run",
         cascade="all, delete-orphan",
     )
+
+    auth_context: Mapped["AuthContext | None"] = relationship(
+        "AuthContext",
+        back_populates="scan_runs",
+    )
+
+    
 
 
 class EndpointScanTarget(Base):
@@ -131,3 +144,20 @@ class EndpointScanResult(Base):
         "EndpointScanTarget",
         back_populates="results",
     )
+
+
+class AuthContext(Base):
+    __tablename__ = "auth_contexts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False, default="default")
+
+    auth_type: Mapped[str] = mapped_column(String(50), nullable=False, default="cookie")
+    # cookie, bearer, custom_header 등
+
+    headers: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    cookies: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -3,7 +3,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from ..models import EndpointScanRun, EndpointScanResult, StackScanResult, StackScanRun, EndpointScanTarget
+from ..models import AuthContext, EndpointScanRun, EndpointScanResult, StackScanResult, StackScanRun, EndpointScanTarget
 from .registry import match_pocs, match_endpoint_pocs
 from .runner import run_poc
 
@@ -58,14 +58,30 @@ def create_and_run_stack_scan(
     return scan_run
 
 
-def create_and_run_endpoints_scan(db, base_url: str, endpoints: list[dict]):
+def create_and_run_endpoints_scan(db, base_url: str, endpoints: list[dict], auth: dict | None = None,):
     scan_id = str(uuid.uuid4())
+
+    auth_context = None
+
+    if auth:
+        auth_context = AuthContext(
+            name=auth.get("name", "default"),
+            auth_type=auth.get("auth_type", "cookie"),
+            headers=auth.get("headers") or {},
+            cookies=auth.get("cookies") or {},
+            description=auth.get("description", ""),
+        )
+        db.add(auth_context)
+        db.commit()
+        db.refresh(auth_context)
 
     scan_run = EndpointScanRun(
         id=scan_id,
         base_url=base_url,
         status="Running",
+        auth_context_id=auth_context.id if auth_context else None,
     )
+
     db.add(scan_run)
     db.commit()
     db.refresh(scan_run)
@@ -107,6 +123,10 @@ def create_and_run_endpoints_scan(db, base_url: str, endpoints: list[dict]):
             "query_params": endpoint.get("query_params", {}),
             "body_params": endpoint.get("body_params", {}),
             "endpoint_type": endpoint.get("endpoint_type", "public"),
+            "auth": {
+                "headers": auth_context.headers if auth_context else {},
+                "cookies": auth_context.cookies if auth_context else {},
+            },
         }
 
         for poc in matched_pocs:
@@ -134,5 +154,5 @@ def get_stack_scan_by_id(db: Session, scan_id: str) -> StackScanRun | None:
     return db.query(StackScanRun).filter(StackScanRun.id == scan_id).first()
 
 
-def get_endpoints_scan_by_id(db: Session, scan_id: str) -> StackScanRun | None:
-    return db.query(StackScanRun).filter(StackScanRun.id == scan_id).first()
+def get_endpoints_scan_by_id(db: Session, scan_id: str) -> EndpointScanRun | None:
+    return db.query(EndpointScanRun).filter(EndpointScanRun.id == scan_id).first()
