@@ -37,10 +37,6 @@ pocs:
     entrypoint_type: login_required
     method:
       - GET
-      - POST
-      - PUT
-      - PATCH
-      - DELETE
     requires_query_params: false
     requires_body_params: false
     # description: 로그인 필요 엔드포인트가 인증 정보 없이도 접근 가능한지 점검합니다.
