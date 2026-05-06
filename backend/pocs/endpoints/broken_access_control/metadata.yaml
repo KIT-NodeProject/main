@@ -26,8 +26,6 @@ pocs:
     entrypoint_type: login_required
     method:
       - POST
-      - PUT
-      - PATCH
     requires_query_params: false
     requires_body_params: true
     # description: 요청 body의 id, user_id, post_id 등을 바꿔 다른 사용자 리소스에 접근 또는 수정 가능한지 점검합니다.
