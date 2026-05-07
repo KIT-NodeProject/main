@@ -235,6 +235,11 @@ def is_number(value):
     return value.isdigit()
 
 
+def value_echoed_in_text(value, text):
+    pattern = rf"(?<!\w){re.escape(str(value))}(?!\w)"
+    return re.search(pattern, text) is not None
+
+
 def mutate_numeric_value(value):
     changed = int(str(value).strip()) + 1
 
@@ -444,7 +449,8 @@ def make_result(status, description, evidence="", raw_output="", vulnerable=Fals
 
 
 def evaluate_probe(baseline_fp, probe_fp, probe_state, probe_response, changed_value):
-    changed_value_echoed = str(changed_value) in probe_response.text
+    changed_value_text = str(changed_value)
+    changed_value_echoed = value_echoed_in_text(changed_value_text, probe_response.text)
 
     if probe_state != "success":
         return (
@@ -468,6 +474,14 @@ def evaluate_probe(baseline_fp, probe_fp, probe_state, probe_response, changed_v
             True,
             changed_value_echoed,
             "변경한 ID 요청이 2xx와 다른 본문을 반환했지만 변경 ID echo가 없어 수동 확인이 필요합니다.",
+        )
+
+    if len(changed_value_text) <= 2:
+        return (
+            False,
+            True,
+            changed_value_echoed,
+            "변경 ID가 너무 짧아 echo만으로 취약 단정이 어려워 수동 확인이 필요합니다.",
         )
 
     return (
