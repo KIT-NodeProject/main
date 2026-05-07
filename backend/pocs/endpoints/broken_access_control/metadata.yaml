@@ -30,8 +30,8 @@ pocs:
     requires_body_params: true
     # description: 요청 body의 id, user_id, post_id 등을 바꿔 다른 사용자 리소스에 접근 또는 수정 가능한지 점검합니다.
 
-  - name: missing_auth_on_protected_endpoint
-    entrypoint: missing_auth_on_protected_endpoint.py
+  - name: unauth_response_matches_auth
+    entrypoint: unauth_response_matches_auth.py
     entrypoint_type: login_required
     method:
       - GET

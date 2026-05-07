@@ -318,7 +318,7 @@ def classify_probe(baseline_response, probe_response):
 
 def make_result(status, description, evidence="", raw_output="", vulnerable=False):
     return {
-        "poc_name": "missing_auth_on_protected_endpoint",
+        "poc_name": "unauth_response_matches_auth",
         "status": status,
         "description": description,
         "evidence": evidence,
