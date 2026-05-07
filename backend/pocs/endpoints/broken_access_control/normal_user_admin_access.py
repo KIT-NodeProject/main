@@ -1,17 +1,22 @@
-import argparse
-import hashlib
 import json
 import re
 import sys
 from urllib.parse import unquote, urlsplit
 
-import requests
+from _common import (
+    ADMIN_DENIAL_SIGNATURES,
+    classify_response,
+    emit,
+    error_result,
+    fingerprint,
+    make_result as common_make_result,
+    parse_payload,
+    request_once,
+)
 
 
 POC_NAME = "normal_user_admin_access"
-REQUEST_TIMEOUT_SECONDS = 3
 SAFE_METHODS = {"GET"}
-REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 AUTH_BLOCK_STATES = {"auth_block", "auth_redirect", "login_page", "denial_body"}
 NORMAL_USER_AUTH_ASSUMPTION = "입력한 인증 정보가 일반 사용자 세션이라고 가정합니다."
 
@@ -38,138 +43,6 @@ ADMIN_INDICATOR_PATTERNS = (
     ("cms", re.compile(r"(^|[^a-z0-9])cms($|[^a-z0-9])", re.IGNORECASE)),
 )
 
-LOGIN_REDIRECT_KEYWORDS = (
-    "account",
-    "login",
-    "signin",
-    "sign-in",
-    "sign_in",
-    "auth",
-    "authenticate",
-    "authentication",
-    "oauth",
-    "sso",
-    "saml",
-    "idp",
-    "identity",
-    "session",
-)
-
-LOGIN_FORM_PATTERN = re.compile(
-    r"<form\b[^>]*>.*?<input\b[^>]*type=[\"']?password",
-    re.IGNORECASE | re.DOTALL,
-)
-
-STRONG_LOGIN_PAGE_SIGNATURES = (
-    'type="password"',
-    "type='password'",
-    "name=\"password\"",
-    "name='password'",
-    "id=\"password\"",
-    "id='password'",
-    "login form",
-    "login-form",
-    "please sign in",
-    "please log in",
-    "please login",
-    "session expired",
-    "session: null",
-    '"session":null',
-)
-
-WEAK_LOGIN_PAGE_SIGNATURES = (
-    "sign in",
-    "log in",
-    "href=\"/login",
-    "href='/login",
-    "action=\"/login",
-    "action='/login",
-)
-
-DENIAL_RESPONSE_SIGNATURES = (
-    "access denied",
-    "permission denied",
-    "forbidden",
-    "not authorized",
-    "not authorised",
-    "unauthorized",
-    "unauthorised",
-    "insufficient privilege",
-    "insufficient permission",
-    "requires admin",
-    "admin only",
-    "administrator only",
-    "role required",
-    "접근 거부",
-    "권한 없음",
-    "권한이 없습니다",
-    "관리자 권한",
-)
-
-SPA_SHELL_SIGNATURES = (
-    'id="root"',
-    "id='root'",
-    'id="app"',
-    "id='app'",
-    "__next_data__",
-    "__nuxt",
-    "vite",
-    "static/js",
-)
-
-
-def fingerprint(response):
-    content = response.content or b""
-
-    return {
-        "status_code": response.status_code,
-        "length": len(content),
-        "sha1": hashlib.sha1(content).hexdigest(),
-        "content_type": response.headers.get("Content-Type", ""),
-        "location": response.headers.get("Location", ""),
-    }
-
-
-def looks_like_html(response):
-    content_type = response.headers.get("Content-Type", "").lower()
-    text_start = response.text[:200].lower()
-
-    return "html" in content_type or "<html" in text_start or "<!doctype html" in text_start
-
-
-def response_text_lower(response, limit=4000):
-    return response.text[:limit].lower()
-
-
-def looks_like_login_page(response):
-    if not looks_like_html(response):
-        return False
-
-    text_lower = response_text_lower(response)
-
-    if LOGIN_FORM_PATTERN.search(response.text[:8000]):
-        return True
-
-    if any(signature in text_lower for signature in STRONG_LOGIN_PAGE_SIGNATURES):
-        return True
-
-    return len(response.content or b"") < 2048 and any(
-        signature in text_lower for signature in WEAK_LOGIN_PAGE_SIGNATURES
-    )
-
-
-def looks_like_denial_response(response):
-    text_lower = response_text_lower(response)
-    return any(signature in text_lower for signature in DENIAL_RESPONSE_SIGNATURES)
-
-
-def looks_like_spa_shell(response):
-    if not looks_like_html(response):
-        return False
-
-    text = response_text_lower(response)
-    return any(signature in text for signature in SPA_SHELL_SIGNATURES)
-
 
 def find_admin_indicators(path, query_params=None):
     parsed = urlsplit(path)
@@ -191,23 +64,13 @@ def find_admin_indicators(path, query_params=None):
     return sorted(set(indicators))
 
 
-def make_headers(auth_headers):
-    headers = {
-        "User-Agent": "Scanner-033ca182-dcdd-406b-bcb5-816d726ca809",
-    }
-    headers.update(auth_headers or {})
-    return headers
-
-
-def request_once(method, url, query_params, auth_headers, auth_cookies):
-    return requests.request(
-        method=method,
-        url=url,
-        params=query_params or {},
-        headers=make_headers(auth_headers),
-        cookies=auth_cookies or {},
-        timeout=REQUEST_TIMEOUT_SECONDS,
-        allow_redirects=False,
+def classify_admin_state(response):
+    return classify_response(
+        response,
+        detect_application_failure=False,
+        detect_login_redirect=True,
+        login_page_include_weak=True,
+        denial_signatures=ADMIN_DENIAL_SIGNATURES,
     )
 
 
@@ -262,53 +125,14 @@ def make_result(status, description, evidence="", raw_output="", vulnerable=Fals
     if NORMAL_USER_AUTH_ASSUMPTION not in description:
         description = f"{description} {NORMAL_USER_AUTH_ASSUMPTION}"
 
-    return {
-        "poc_name": POC_NAME,
-        "status": status,
-        "description": description,
-        "evidence": evidence,
-        "raw_output": raw_output,
-        "vulnerable": vulnerable,
-    }
-
-
-def classify_access_state(response):
-    status_code = response.status_code
-    location = response.headers.get("Location", "")
-    location_lower = location.lower()
-
-    if status_code >= 500:
-        return "server_error"
-
-    if status_code in (401, 403):
-        return "auth_block"
-
-    if status_code in REDIRECT_STATUSES:
-        if not location:
-            return "empty_redirect"
-        if any(keyword in location_lower for keyword in LOGIN_REDIRECT_KEYWORDS):
-            return "auth_redirect"
-        return "other_redirect"
-
-    if status_code == 404:
-        return "not_found"
-
-    if status_code == 405:
-        return "method_not_allowed"
-
-    if 400 <= status_code < 500:
-        return "client_error"
-
-    if 200 <= status_code < 300:
-        if looks_like_login_page(response):
-            return "login_page"
-        if looks_like_denial_response(response):
-            return "denial_body"
-        if looks_like_spa_shell(response):
-            return "spa_shell"
-        return "success"
-
-    return "unknown"
+    return common_make_result(
+        poc_name=POC_NAME,
+        status=status,
+        description=description,
+        evidence=evidence,
+        raw_output=raw_output,
+        vulnerable=vulnerable,
+    )
 
 
 def build_evidence(unauth_baseline, normal_user_probe, baseline_state, probe_state):
@@ -328,8 +152,8 @@ def classify_responses(
     unauth_baseline,
     normal_user_probe,
 ):
-    baseline_state = classify_access_state(unauth_baseline)
-    probe_state = classify_access_state(normal_user_probe)
+    baseline_state = classify_admin_state(unauth_baseline)
+    probe_state = classify_admin_state(normal_user_probe)
     baseline_fp = fingerprint(unauth_baseline)
     probe_fp = fingerprint(normal_user_probe)
     evidence = build_evidence(
@@ -509,12 +333,7 @@ def classify_responses(
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True)
-    args = parser.parse_args()
-
-    with open(args.input, "r", encoding="utf-8") as f:
-        payload = json.load(f)
+    payload = parse_payload()
 
     base_url = payload["base_url"].rstrip("/")
     path = payload.get("path", "")
@@ -536,7 +355,7 @@ def main():
 
     try:
         if method not in SAFE_METHODS:
-            result = make_result(
+            emit(make_result(
                 status="Skipped",
                 description=f"{method} 요청은 일반 사용자 probe가 자원 변경을 일으킬 수 있어 건너뜁니다.",
                 evidence=f"unsafe_method={method}",
@@ -550,12 +369,11 @@ def main():
                     note="안전하지 않은 메서드라 실제 요청 전 검사를 건너뛰었습니다.",
                 ),
                 vulnerable=False,
-            )
-            print(json.dumps(result, ensure_ascii=False))
+            ))
             return
 
         if not admin_indicators:
-            result = make_result(
+            emit(make_result(
                 status="Skipped",
                 description="경로에서 관리자/운영자 기능으로 볼 만한 신호를 찾지 못해 검사를 건너뜁니다.",
                 evidence="missing admin path indicator",
@@ -568,12 +386,11 @@ def main():
                     admin_indicators=admin_indicators,
                 ),
                 vulnerable=False,
-            )
-            print(json.dumps(result, ensure_ascii=False))
+            ))
             return
 
         if not auth_headers and not auth_cookies:
-            result = make_result(
+            emit(make_result(
                 status="Skipped",
                 description="일반 사용자 세션으로 사용할 Cookie 또는 Authorization 값이 없어 검사를 건너뜁니다.",
                 evidence="missing normal user auth",
@@ -586,8 +403,7 @@ def main():
                     admin_indicators=admin_indicators,
                 ),
                 vulnerable=False,
-            )
-            print(json.dumps(result, ensure_ascii=False))
+            ))
             return
 
         unauth_baseline = request_once(
@@ -618,15 +434,9 @@ def main():
         )
 
     except Exception as e:
-        result = make_result(
-            status="Error",
-            description="PoC execution failed.",
-            evidence=str(e),
-            raw_output="",
-            vulnerable=False,
-        )
+        result = error_result(POC_NAME, e)
 
-    print(json.dumps(result, ensure_ascii=False))
+    emit(result)
 
 
 if __name__ == "__main__":
