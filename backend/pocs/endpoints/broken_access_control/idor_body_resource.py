@@ -128,9 +128,8 @@ def path_query_text(path):
     )
 
 
-def path_query_tokens(path):
-    target = path_query_text(path)
-    separated = re.sub(r"([a-z])([A-Z])", r"\1 \2", target)
+def tokenize_text(value):
+    separated = re.sub(r"([a-z])([A-Z])", r"\1 \2", str(value))
     return {
         token
         for token in re.split(r"[^a-z0-9]+", separated.lower())
@@ -138,8 +137,25 @@ def path_query_tokens(path):
     }
 
 
-def looks_dangerous(path):
-    tokens = path_query_tokens(path)
+def iter_body_tokens(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield from tokenize_text(key)
+            yield from iter_body_tokens(child)
+        return
+
+    if isinstance(value, list):
+        for child in value:
+            yield from iter_body_tokens(child)
+        return
+
+    if value is not None:
+        yield from tokenize_text(value)
+
+
+def looks_dangerous(path, body_params):
+    tokens = tokenize_text(path_query_text(path))
+    tokens.update(iter_body_tokens(body_params))
     return any(keyword in tokens for keyword in DANGEROUS_KEYWORDS)
 
 
@@ -151,7 +167,10 @@ def select_body_mode(auth_headers, path, body_params):
             content_type = str(value).lower()
             break
 
-    if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
+    if "multipart/form-data" in content_type:
+        return "multipart"
+
+    if "application/x-www-form-urlencoded" in content_type:
         return "form"
 
     if "json" in content_type:
@@ -328,6 +347,20 @@ def main():
             ))
             return
 
+        if body_mode == "multipart":
+            emit(make_result(
+                poc_name=POC_NAME,
+                status="Skipped",
+                description="multipart/form-data 요청은 원본 boundary와 파일 파트를 안전하게 재현하기 어려워 자동 probe를 건너뜁니다.",
+                evidence="multipart body unsupported",
+                raw_output=build_raw_output(
+                    method, path, query_params, body_params, auth_headers, auth_cookies,
+                    candidate_paths, body_mode=body_mode,
+                    note="multipart 요청은 실제 업로드 파트와 boundary를 보존한 수동 검증이 필요합니다.",
+                ),
+            ))
+            return
+
         if body_mode == "form" and contains_nested_value(body_params):
             emit(make_result(
                 poc_name=POC_NAME,
@@ -342,12 +375,12 @@ def main():
             ))
             return
 
-        if looks_dangerous(path):
+        if looks_dangerous(path, body_params):
             emit(make_result(
                 poc_name=POC_NAME,
                 status="Skipped",
-                description="대상 요청이 생성/수정/삭제 계열로 보여 body IDOR 자동 probe를 건너뜁니다.",
-                evidence="dangerous body operation heuristic matched",
+                description="대상 요청의 path 또는 body가 생성/수정/삭제 계열로 보여 body IDOR 자동 probe를 건너뜁니다.",
+                evidence="dangerous path/body operation heuristic matched",
                 raw_output=build_raw_output(
                     method, path, query_params, body_params, auth_headers, auth_cookies,
                     candidate_paths, body_mode=body_mode,

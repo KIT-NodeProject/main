@@ -18,6 +18,7 @@ from _common import (
 POC_NAME = "normal_user_admin_access"
 SAFE_METHODS = {"GET"}
 AUTH_BLOCK_STATES = {"auth_block", "auth_redirect", "login_page", "denial_body"}
+PROTECTED_OR_HIDDEN_STATES = AUTH_BLOCK_STATES | {"not_found", "client_error"}
 NORMAL_USER_AUTH_ASSUMPTION = "입력한 인증 정보가 일반 사용자 세션이라고 가정합니다."
 
 ADMIN_INDICATOR_PATTERNS = (
@@ -277,10 +278,10 @@ def classify_responses(
             vulnerable=False,
         )
 
-    if baseline_state in AUTH_BLOCK_STATES:
+    if baseline_state in PROTECTED_OR_HIDDEN_STATES:
         return make_result(
             status="Completed",
-            description="비인증 요청은 차단되지만 일반 사용자 세션은 관리자 경로에서 성공 응답을 받았습니다.",
+            description="비인증 요청은 차단되거나 숨겨졌지만 일반 사용자 세션은 관리자 경로에서 성공 응답을 받았습니다.",
             evidence=f"{evidence}, indicators={','.join(admin_indicators)}",
             raw_output=raw_output,
             vulnerable=True,
