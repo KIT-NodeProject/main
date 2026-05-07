@@ -17,7 +17,7 @@ pocs:
     entrypoint_type: login_required
     method:
       - DELETE
-    requires_query_params: false
+    requires_query_params: true
     requires_body_params: false
     # description: 쿼리 파라미터의 ID 값을 변경해 다른 사용자 리소스를 삭제할 수 있는지 점검합니다.
 
