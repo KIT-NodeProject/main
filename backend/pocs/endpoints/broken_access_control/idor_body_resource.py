@@ -14,6 +14,7 @@ from _common import (
     is_number,
     make_result,
     mutate_numeric_value,
+    normalize_key_for_matching,
     parse_payload,
     request_once,
     value_echoed_in_text,
@@ -60,8 +61,8 @@ def normalized_key(key_path):
 
 
 def is_candidate_key(key_path, value):
-    key = normalized_key(key_path)
-    leaf_key = str(key_path[-1]).lower()
+    leaf_key = normalize_key_for_matching(str(key_path[-1]))
+    key = ".".join(normalize_key_for_matching(str(part)) for part in key_path)
 
     if leaf_key in IGNORE_KEYS or key in IGNORE_KEYS:
         return False
