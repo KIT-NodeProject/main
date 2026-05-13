@@ -1,0 +1,48 @@
+{
+  "base_url": "http://broken-access-control-lab:9000",
+  "auth": {
+    "name": "kim normal user",
+    "auth_type": "cookie",
+    "cookies": {
+      "session": "kim"
+    },
+    "headers": {},
+    "description": "Normal user session for broken access control PoCs"
+  },
+  "endpoints": [
+    {
+      "path": "/vuln/profile",
+      "method": "GET",
+      "endpoint_type": "login_required",
+      "query_params": {
+        "user_id": 1
+      }
+    },
+    {
+      "path": "/vuln/document",
+      "method": "POST",
+      "endpoint_type": "login_required",
+      "body_params": {
+        "document_id": 1001
+      }
+    },
+    {
+      "path": "/vuln/post",
+      "method": "DELETE",
+      "endpoint_type": "login_required",
+      "query_params": {
+        "post_id": 1
+      }
+    },
+    {
+      "path": "/vuln/private-dashboard",
+      "method": "GET",
+      "endpoint_type": "login_required"
+    },
+    {
+      "path": "/vuln/admin/users",
+      "method": "GET",
+      "endpoint_type": "login_required"
+    }
+  ]
+}

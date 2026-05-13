@@ -1,0 +1,11 @@
+FROM php:8.2-apache
+
+WORKDIR /var/www/html
+
+COPY . /var/www/html/
+
+RUN docker-php-ext-install mysqli
+RUN mkdir -p vuln/uploads && chmod 777 vuln/uploads
+RUN mkdir -p secure/uploads && chmod 777 secure/uploads
+
+EXPOSE 80
