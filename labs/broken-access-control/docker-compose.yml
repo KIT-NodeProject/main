@@ -1,0 +1,16 @@
+services:
+  broken-access-control-lab:
+    build:
+      context: .
+    container_name: broken-access-control-lab
+    ports:
+      - "9001:9000"
+    networks:
+      scanner-lab-net:
+        aliases:
+          - broken-access-control-lab
+    restart: unless-stopped
+
+networks:
+  scanner-lab-net:
+    external: true

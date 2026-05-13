@@ -17,7 +17,7 @@ pocs:
     entrypoint_type: login_required
     method:
       - DELETE
-    requires_query_params: false
+    requires_query_params: true
     requires_body_params: false
     # description: 쿼리 파라미터의 ID 값을 변경해 다른 사용자 리소스를 삭제할 수 있는지 점검합니다.
 
@@ -26,21 +26,15 @@ pocs:
     entrypoint_type: login_required
     method:
       - POST
-      - PUT
-      - PATCH
     requires_query_params: false
     requires_body_params: true
     # description: 요청 body의 id, user_id, post_id 등을 바꿔 다른 사용자 리소스에 접근 또는 수정 가능한지 점검합니다.
 
-  - name: missing_auth_on_protected_endpoint
-    entrypoint: missing_auth_on_protected_endpoint.py
+  - name: unauth_response_matches_auth
+    entrypoint: unauth_response_matches_auth.py
     entrypoint_type: login_required
     method:
       - GET
-      - POST
-      - PUT
-      - PATCH
-      - DELETE
     requires_query_params: false
     requires_body_params: false
     # description: 로그인 필요 엔드포인트가 인증 정보 없이도 접근 가능한지 점검합니다.
@@ -50,10 +44,6 @@ pocs:
     entrypoint_type: login_required
     method:
       - GET
-      - POST
-      - PUT
-      - PATCH
-      - DELETE
     requires_query_params: false
     requires_body_params: false
     # description: 일반 사용자 세션으로 관리자 기능 또는 관리자 API에 접근 가능한지 점검합니다.

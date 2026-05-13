@@ -1,6 +1,6 @@
-category: authentiaction_failures
-display_name: authentiaction_failures
-description: authentiaction_failures related endpoint tests
+category: authentication_failures
+display_name: authentication_failures
+description: authentication_failures related endpoint tests
 pocs:
   - name: missing_auth_on_protected_endpoint
     entrypoint: missing_auth_on_protected_endpoint.py

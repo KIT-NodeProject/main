@@ -26,6 +26,9 @@ services:
       - "8001:8001"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - scanner-lab-net
     restart: unless-stopped
 
   frontend:
@@ -41,3 +44,7 @@ services:
 
 volumes:
   mysql_data:
+
+networks:
+  scanner-lab-net:
+    external: true

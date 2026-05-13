@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: usertest
+      MYSQL_PASSWORD: passwordtest
+      MYSQL_DATABASE: board
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - my-network
+
+  php:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: php-container
+    working_dir: /var/www/html
+    depends_on:
+      - mysql
+    ports:
+      - "80:80"
+    networks:
+      my-network:
+      scanner-lab-net:
+        aliases:
+          - tas-legacy-lab
+
+volumes:
+  mysql-data:
+
+networks:
+  my-network:
+    driver: bridge
+  scanner-lab-net:
+    external: true

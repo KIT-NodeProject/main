@@ -161,3 +161,8 @@ class AuthContext(Base):
 
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    scan_runs: Mapped[list["EndpointScanRun"]] = relationship(
+        "EndpointScanRun",
+        back_populates="auth_context",
+    )
