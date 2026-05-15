@@ -13,8 +13,9 @@ pocs:
 #   method: POST
 #   requires_query_params: false
 #   requires_body_params: true
-# - name: accepts_invalid_token
-#   entrypoint: accepts_invalid_token.py
-#   method: GET
-#   requires_query_params: false
-#   requires_body_params: false
+  - name: accepts_invalid_token
+    entrypoint: accepts_invalid_token.py
+    entrypoint_type: login_required
+    method: GET
+    requires_query_params: false
+    requires_body_params: false

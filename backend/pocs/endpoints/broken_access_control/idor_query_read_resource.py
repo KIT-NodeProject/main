@@ -1,7 +1,7 @@
 import json
 import sys
 
-from _common import (
+from backend.pocs.endpoints._common import (
     IGNORE_KEYS,
     emit,
     error_result,

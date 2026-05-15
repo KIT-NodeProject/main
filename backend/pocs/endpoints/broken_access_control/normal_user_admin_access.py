@@ -3,7 +3,7 @@ import re
 import sys
 from urllib.parse import unquote, urlsplit
 
-from _common import (
+from backend.pocs.endpoints._common import (
     ADMIN_DENIAL_SIGNATURES,
     classify_response,
     emit,

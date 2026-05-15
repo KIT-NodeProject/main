@@ -4,7 +4,7 @@ import re
 import sys
 from urllib.parse import unquote, urlsplit
 
-from _common import (
+from backend.pocs.endpoints._common import (
     ID_KEY_PATTERN,
     IGNORE_KEYS,
     classify_response,

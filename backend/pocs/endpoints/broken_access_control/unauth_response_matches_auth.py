@@ -1,7 +1,7 @@
 import json
 import sys
 
-from _common import (
+from backend.pocs.endpoints._common import (
     classify_response,
     emit,
     error_result,
