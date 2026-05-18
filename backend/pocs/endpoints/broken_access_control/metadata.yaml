@@ -48,13 +48,11 @@ pocs:
     requires_body_params: false
     # description: 일반 사용자 세션으로 관리자 기능 또는 관리자 API에 접근 가능한지 점검합니다.
 
-  # - name: mass_assignment_privilege_escalation
-  #   entrypoint: mass_assignment_privilege_escalation.py
-  #   entrypoint_type: login_required
-  #   method:
-  #     - POST
-  #     - PUT
-  #     - PATCH
-  #   requires_query_params: false
-  #   requires_body_params: true
-  # description: role, isAdmin, authority 같은 권한 필드를 body에 추가했을 때 권한 상승이 가능한지 점검합니다.
+  - name: mass_assignment_privilege_escalation
+    entrypoint: mass_assignment_privilege_escalation.py
+    entrypoint_type: login_required
+    method:
+      - POST
+    requires_query_params: false
+    requires_body_params: true
+    # description: role, isAdmin, authority 같은 권한 필드를 body에 추가했을 때 권한 상승이 가능한지 점검합니다.
