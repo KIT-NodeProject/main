@@ -9,14 +9,58 @@ import type {
   StackScanResponse,
 } from "../../types/scan";
 
+export type EndpointReportSelection = "all" | number;
+
 type ConfigProps = {
   common: CommonConfig;
   endpointRequests: EndpointRequestDraft[];
+  endpointScans?: EndpointScanResponse[];
+  selectedEndpointIndex: EndpointReportSelection;
   stack: StackConfig;
+  onSelectEndpoint: (selection: EndpointReportSelection) => void;
 };
 
-export function ReportConfigPanel({ common, endpointRequests, stack }: ConfigProps) {
+function endpointReportBadge(scan?: EndpointScanResponse) {
+  if (!scan) {
+    return {
+      label: "결과 대기",
+      className: "border-slate-200 bg-white text-slate-500",
+    };
+  }
+
+  const vulnerableCount = scan.results.filter((result) => result.vulnerable).length;
+
+  if (vulnerableCount > 0) {
+    return {
+      label: `취약 ${vulnerableCount}`,
+      className: "border-rose-200 bg-rose-50 text-rose-700",
+    };
+  }
+
+  if (scan.results.length > 0) {
+    return {
+      label: `결과 ${scan.results.length}`,
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    };
+  }
+
+  return {
+    label: "결과 없음",
+    className: "border-slate-200 bg-white text-slate-500",
+  };
+}
+
+export function ReportConfigPanel({
+  common,
+  endpointRequests,
+  endpointScans,
+  selectedEndpointIndex,
+  stack,
+  onSelectEndpoint,
+}: ConfigProps) {
   const configuredRequests = endpointRequests.filter((request) => request.path.trim());
+  const endpointScanCount = endpointScans?.length ?? 0;
+  const isAllSelected = selectedEndpointIndex === "all";
 
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white/88 p-6">
@@ -41,33 +85,92 @@ export function ReportConfigPanel({ common, endpointRequests, stack }: ConfigPro
 
         {configuredRequests.length > 0 ? (
           <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-            <p className="text-sm text-slate-600">엔드포인트 요청</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-slate-600">엔드포인트 요청</p>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                {endpointScanCount}개 리포트
+              </span>
+            </div>
             <div className="mt-4 space-y-3">
-              {configuredRequests.map((request, index) => (
-                <div
-                  key={request.id}
-                  className="rounded-2xl border border-slate-200 bg-white px-4 py-4"
-                >
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
-                      {index + 1}
-                    </span>
-                    <span
-                      className={[
-                        "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
-                        methodTone(request.method),
-                      ].join(" ")}
-                    >
-                      {request.method}
-                    </span>
-                    <h3 className="font-semibold text-slate-950">{request.name}</h3>
-                  </div>
-
-                  <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
-                    {composeRequestUrl(common.baseUrl, request.path)}
-                  </p>
+              <button
+                type="button"
+                onClick={() => onSelectEndpoint("all")}
+                aria-pressed={isAllSelected}
+                className={[
+                  "w-full rounded-2xl border px-4 py-4 text-left transition",
+                  isAllSelected
+                    ? "border-slate-950 bg-slate-950 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                ].join(" ")}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="font-semibold">전체 결과</span>
+                  <span
+                    className={[
+                      "rounded-full border px-3 py-1 text-xs",
+                      isAllSelected
+                        ? "border-white/20 bg-white/10 text-white"
+                        : "border-slate-200 bg-slate-50 text-slate-600",
+                    ].join(" ")}
+                  >
+                    모든 리포트
+                  </span>
                 </div>
-              ))}
+              </button>
+              {configuredRequests.map((request, index) => {
+                const badge = endpointReportBadge(endpointScans?.[index]);
+
+                return (
+                  <button
+                    type="button"
+                    key={request.id}
+                    onClick={() => onSelectEndpoint(index)}
+                    aria-pressed={selectedEndpointIndex === index}
+                    className={[
+                      "w-full rounded-2xl border px-4 py-4 text-left transition",
+                      selectedEndpointIndex === index
+                        ? "border-slate-950 bg-white shadow-sm ring-2 ring-slate-950/10"
+                        : "border-slate-200 bg-white hover:border-slate-300",
+                    ].join(" ")}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span
+                          className={[
+                            "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                            selectedEndpointIndex === index
+                              ? "bg-slate-950 text-white ring-slate-950"
+                              : "bg-slate-100 text-slate-700 ring-slate-200",
+                          ].join(" ")}
+                        >
+                          {index + 1}
+                        </span>
+                        <span
+                          className={[
+                            "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                            methodTone(request.method),
+                          ].join(" ")}
+                        >
+                          {request.method}
+                        </span>
+                        <h3 className="font-semibold text-slate-950">{request.name}</h3>
+                      </div>
+                      <span
+                        className={[
+                          "rounded-full border px-3 py-1 text-xs",
+                          badge.className,
+                        ].join(" ")}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
+                      {composeRequestUrl(common.baseUrl, request.path)}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </article>
         ) : null}
@@ -293,24 +396,54 @@ function EndpointResultCard({
   );
 }
 
-function EndpointResultsSection({ scans }: { scans: EndpointScanResponse[] }) {
+function EndpointResultsSection({
+  scans,
+  selectedEndpointIndex,
+}: {
+  scans: EndpointScanResponse[];
+  selectedEndpointIndex: EndpointReportSelection;
+}) {
+  const selectedScan =
+    typeof selectedEndpointIndex === "number" ? scans[selectedEndpointIndex] : undefined;
+  const visibleScans =
+    selectedEndpointIndex === "all"
+      ? scans.map((scan, index) => ({ scan, index }))
+      : selectedScan
+        ? [{ scan: selectedScan, index: selectedEndpointIndex }]
+        : [];
+  const selectedSummary = selectedScan ? getEndpointSummary(selectedScan) : undefined;
+
   return (
     <SectionShell
       title="엔드포인트 검사 결과"
-      subtitle="각 요청별로 생성된 개별 리포트입니다."
+      subtitle={
+        selectedEndpointIndex === "all"
+          ? "각 요청별로 생성된 개별 리포트입니다."
+          : selectedSummary
+            ? `${selectedSummary.title} 결과만 표시 중입니다.`
+            : "선택한 엔드포인트 결과를 찾지 못했습니다."
+      }
       meta={
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
-          Endpoint Reports: {scans.length}
-        </span>
+        <>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            Endpoint Reports: {selectedEndpointIndex === "all" ? scans.length : visibleScans.length}
+            {selectedEndpointIndex !== "all" ? ` / ${scans.length}` : ""}
+          </span>
+          {selectedEndpointIndex !== "all" ? (
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+              선택: {Number(selectedEndpointIndex) + 1}
+            </span>
+          ) : null}
+        </>
       }
     >
-      {scans.length === 0 ? (
+      {visibleScans.length === 0 ? (
         <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-600">
           엔드포인트 검사 결과가 없습니다.
         </article>
       ) : (
         <div className="space-y-5">
-          {scans.map((scan, index) => (
+          {visibleScans.map(({ scan, index }) => (
             <EndpointResultCard key={scan.scan_id} data={scan} index={index} />
           ))}
         </div>
@@ -321,14 +454,23 @@ function EndpointResultsSection({ scans }: { scans: EndpointScanResponse[] }) {
 
 type ResultProps = {
   scanResult: ScanResult;
+  selectedEndpointIndex: EndpointReportSelection;
 };
 
-export function ReportResultPanel({ scanResult }: ResultProps) {
+export function ReportResultPanel({ scanResult, selectedEndpointIndex }: ResultProps) {
+  const hasFocusedEndpoint =
+    selectedEndpointIndex !== "all" && Boolean(scanResult.endpoint_scans?.length);
+
   return (
     <div className="space-y-6">
-      {scanResult.stack_scan ? <StackResultSection data={scanResult.stack_scan} /> : null}
+      {!hasFocusedEndpoint && scanResult.stack_scan ? (
+        <StackResultSection data={scanResult.stack_scan} />
+      ) : null}
       {scanResult.endpoint_scans ? (
-        <EndpointResultsSection scans={scanResult.endpoint_scans} />
+        <EndpointResultsSection
+          scans={scanResult.endpoint_scans}
+          selectedEndpointIndex={selectedEndpointIndex}
+        />
       ) : null}
     </div>
   );

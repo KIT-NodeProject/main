@@ -1,11 +1,31 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 from typing import Any
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+
+def build_poc_env(entrypoint_path: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    import_paths = [
+        str(PROJECT_ROOT),
+        str(entrypoint_path.parent.parent),
+    ]
+    existing_pythonpath = env.get("PYTHONPATH")
+
+    if existing_pythonpath:
+        import_paths.append(existing_pythonpath)
+
+    env["PYTHONPATH"] = os.pathsep.join(import_paths)
+
+    return env
 
 
 def run_poc(definition, execution_input: dict[str, Any]) -> dict[str, Any]:
@@ -26,6 +46,7 @@ def run_poc(definition, execution_input: dict[str, Any]) -> dict[str, Any]:
             capture_output=True,
             text=True,
             timeout=10,
+            env=build_poc_env(definition.entrypoint_path),
         )
 
         stdout_text = completed.stdout.strip()

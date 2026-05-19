@@ -1,4 +1,4 @@
-"""Shared constants and helpers for broken_access_control PoCs."""
+"""Shared constants and helpers for endpoint PoCs."""
 from __future__ import annotations
 
 import argparse
