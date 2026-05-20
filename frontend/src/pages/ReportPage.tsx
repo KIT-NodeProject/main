@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import AppFrame from "../components/AppFrame";
-import type { EndpointReportSelection } from "../features/flow/ReportPanels";
+import type { ReportSelection } from "../features/flow/ReportPanels";
 import { ReportConfigPanel, ReportResultPanel } from "../features/flow/ReportPanels";
 import { useScanStore } from "../store/scanStore";
+import type { ScanResult } from "../types/scan";
+
+function getDefaultReportSelection(scanResult?: ScanResult): ReportSelection {
+  if (scanResult?.stack_scan) return { type: "stack" };
+  if (scanResult?.endpoint_scans?.length) return { type: "endpoint", index: 0 };
+  return { type: "all" };
+}
 
 function ReportPage() {
   const navigate = useNavigate();
@@ -12,19 +19,22 @@ function ReportPage() {
   const stack = useScanStore((state) => state.stack);
   const scanResult = useScanStore((state) => state.scanResult);
   const resetAll = useScanStore((state) => state.resetAll);
-  const [endpointSelection, setEndpointSelection] = useState<{
+  const [reportSelection, setReportSelection] = useState<{
     reportKey: string;
-    value: EndpointReportSelection;
-  }>({ reportKey: "", value: 0 });
-  const endpointReportKey = scanResult?.endpoint_scans?.map((scan) => scan.scan_id).join("|") ?? "";
-  const selectedEndpointIndex =
-    endpointSelection.reportKey === endpointReportKey
-      ? endpointSelection.value
-      : endpointReportKey
-        ? 0
-        : "all";
-  const selectEndpoint = (selection: EndpointReportSelection) => {
-    setEndpointSelection({ reportKey: endpointReportKey, value: selection });
+    value: ReportSelection;
+  }>({ reportKey: "", value: { type: "all" } });
+  const reportKey = scanResult
+    ? [
+        scanResult.stack_scan?.scan_id ?? "no-stack",
+        ...(scanResult.endpoint_scans?.map((scan) => scan.scan_id) ?? ["no-endpoints"]),
+      ].join("|")
+    : "";
+  const selectedReport =
+    reportSelection.reportKey === reportKey
+      ? reportSelection.value
+      : getDefaultReportSelection(scanResult);
+  const selectReport = (selection: ReportSelection) => {
+    setReportSelection({ reportKey, value: selection });
   };
 
   if (!scanResult) return <Navigate replace to="/run" />;
@@ -59,14 +69,12 @@ function ReportPage() {
           common={common}
           endpointRequests={endpointRequests}
           endpointScans={scanResult.endpoint_scans}
-          selectedEndpointIndex={selectedEndpointIndex}
+          selectedReport={selectedReport}
           stack={stack}
-          onSelectEndpoint={selectEndpoint}
+          stackScan={scanResult.stack_scan}
+          onSelectReport={selectReport}
         />
-        <ReportResultPanel
-          scanResult={scanResult}
-          selectedEndpointIndex={selectedEndpointIndex}
-        />
+        <ReportResultPanel scanResult={scanResult} selectedReport={selectedReport} />
       </div>
     </AppFrame>
   );

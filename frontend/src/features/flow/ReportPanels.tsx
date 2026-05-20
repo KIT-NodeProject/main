@@ -9,18 +9,24 @@ import type {
   StackScanResponse,
 } from "../../types/scan";
 
-export type EndpointReportSelection = "all" | number;
+export type ReportSelection =
+  | { type: "all" }
+  | { type: "stack" }
+  | { type: "endpoint"; index: number };
+
+type EndpointReportSelection = "all" | number;
 
 type ConfigProps = {
   common: CommonConfig;
   endpointRequests: EndpointRequestDraft[];
   endpointScans?: EndpointScanResponse[];
-  selectedEndpointIndex: EndpointReportSelection;
+  selectedReport: ReportSelection;
   stack: StackConfig;
-  onSelectEndpoint: (selection: EndpointReportSelection) => void;
+  stackScan?: StackScanResponse;
+  onSelectReport: (selection: ReportSelection) => void;
 };
 
-function endpointReportBadge(scan?: EndpointScanResponse) {
+function reportBadge(scan?: { results: ScanResultItem[] }) {
   if (!scan) {
     return {
       label: "결과 대기",
@@ -54,13 +60,19 @@ export function ReportConfigPanel({
   common,
   endpointRequests,
   endpointScans,
-  selectedEndpointIndex,
+  selectedReport,
   stack,
-  onSelectEndpoint,
+  stackScan,
+  onSelectReport,
 }: ConfigProps) {
   const configuredRequests = endpointRequests.filter((request) => request.path.trim());
   const endpointScanCount = endpointScans?.length ?? 0;
-  const isAllSelected = selectedEndpointIndex === "all";
+  const stackLabel = stack.stackName || stackScan?.stack_name || "미입력";
+  const hasStackTarget = Boolean(stack.stackName.trim() || stackScan);
+  const reportCount = (stackScan ? 1 : 0) + endpointScanCount;
+  const isAllSelected = selectedReport.type === "all";
+  const isStackSelected = selectedReport.type === "stack";
+  const stackBadge = reportBadge(stackScan);
 
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white/88 p-6">
@@ -79,101 +91,126 @@ export function ReportConfigPanel({
         </article>
 
         <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-          <p className="text-sm text-slate-600">사용 기술 / 프레임 워크</p>
-          <p className="mt-2 font-semibold text-slate-950">{stack.stackName || "미입력"}</p>
-        </article>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">검사 결과</p>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+              {reportCount}개 리포트
+            </span>
+          </div>
+          <div className="mt-4 space-y-3">
+            <button
+              type="button"
+              onClick={() => onSelectReport({ type: "all" })}
+              aria-pressed={isAllSelected}
+              className={[
+                "w-full rounded-2xl border px-4 py-4 text-left transition",
+                isAllSelected
+                  ? "border-slate-950 bg-slate-950 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+              ].join(" ")}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="font-semibold">전체 결과</span>
+                <span
+                  className={[
+                    "rounded-full border px-3 py-1 text-xs",
+                    isAllSelected
+                      ? "border-white/20 bg-white/10 text-white"
+                      : "border-slate-200 bg-slate-50 text-slate-600",
+                  ].join(" ")}
+                >
+                  모든 리포트
+                </span>
+              </div>
+            </button>
 
-        {configuredRequests.length > 0 ? (
-          <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-600">엔드포인트 요청</p>
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
-                {endpointScanCount}개 리포트
-              </span>
-            </div>
-            <div className="mt-4 space-y-3">
+            {hasStackTarget ? (
               <button
                 type="button"
-                onClick={() => onSelectEndpoint("all")}
-                aria-pressed={isAllSelected}
+                onClick={() => onSelectReport({ type: "stack" })}
+                aria-pressed={isStackSelected}
                 className={[
                   "w-full rounded-2xl border px-4 py-4 text-left transition",
-                  isAllSelected
-                    ? "border-slate-950 bg-slate-950 text-white shadow-sm"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                  isStackSelected
+                    ? "border-slate-950 bg-white shadow-sm ring-2 ring-slate-950/10"
+                    : "border-slate-200 bg-white hover:border-slate-300",
                 ].join(" ")}
               >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="font-semibold">전체 결과</span>
-                  <span
-                    className={[
-                      "rounded-full border px-3 py-1 text-xs",
-                      isAllSelected
-                        ? "border-white/20 bg-white/10 text-white"
-                        : "border-slate-200 bg-slate-50 text-slate-600",
-                    ].join(" ")}
-                  >
-                    모든 리포트
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">사용 기술 / 프레임 워크</p>
+                    <p className="mt-2 text-sm text-slate-600">{stackLabel}</p>
+                  </div>
+                  <span className={["rounded-full border px-3 py-1 text-xs", stackBadge.className].join(" ")}>
+                    {stackBadge.label}
                   </span>
                 </div>
               </button>
-              {configuredRequests.map((request, index) => {
-                const badge = endpointReportBadge(endpointScans?.[index]);
+            ) : null}
 
-                return (
-                  <button
-                    type="button"
-                    key={request.id}
-                    onClick={() => onSelectEndpoint(index)}
-                    aria-pressed={selectedEndpointIndex === index}
-                    className={[
-                      "w-full rounded-2xl border px-4 py-4 text-left transition",
-                      selectedEndpointIndex === index
-                        ? "border-slate-950 bg-white shadow-sm ring-2 ring-slate-950/10"
-                        : "border-slate-200 bg-white hover:border-slate-300",
-                    ].join(" ")}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span
-                          className={[
-                            "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
-                            selectedEndpointIndex === index
-                              ? "bg-slate-950 text-white ring-slate-950"
-                              : "bg-slate-100 text-slate-700 ring-slate-200",
-                          ].join(" ")}
-                        >
-                          {index + 1}
+            {configuredRequests.length > 0 ? (
+              <div className="space-y-3 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+                  <p className="text-sm text-slate-600">엔드포인트 요청</p>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                    {endpointScanCount}개 리포트
+                  </span>
+                </div>
+                {configuredRequests.map((request, index) => {
+                  const isEndpointSelected =
+                    selectedReport.type === "endpoint" && selectedReport.index === index;
+                  const badge = reportBadge(endpointScans?.[index]);
+
+                  return (
+                    <button
+                      type="button"
+                      key={request.id}
+                      onClick={() => onSelectReport({ type: "endpoint", index })}
+                      aria-pressed={isEndpointSelected}
+                      className={[
+                        "w-full rounded-2xl border px-4 py-4 text-left transition",
+                        isEndpointSelected
+                          ? "border-slate-950 bg-white shadow-sm ring-2 ring-slate-950/10"
+                          : "border-slate-200 bg-white hover:border-slate-300",
+                      ].join(" ")}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span
+                            className={[
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                              isEndpointSelected
+                                ? "bg-slate-950 text-white ring-slate-950"
+                                : "bg-slate-100 text-slate-700 ring-slate-200",
+                            ].join(" ")}
+                          >
+                            {index + 1}
+                          </span>
+                          <span
+                            className={[
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                              methodTone(request.method),
+                            ].join(" ")}
+                          >
+                            {request.method}
+                          </span>
+                          <h3 className="font-semibold text-slate-950">{request.name}</h3>
+                        </div>
+                        <span className={["rounded-full border px-3 py-1 text-xs", badge.className].join(" ")}>
+                          {badge.label}
                         </span>
-                        <span
-                          className={[
-                            "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
-                            methodTone(request.method),
-                          ].join(" ")}
-                        >
-                          {request.method}
-                        </span>
-                        <h3 className="font-semibold text-slate-950">{request.name}</h3>
                       </div>
-                      <span
-                        className={[
-                          "rounded-full border px-3 py-1 text-xs",
-                          badge.className,
-                        ].join(" ")}
-                      >
-                        {badge.label}
-                      </span>
-                    </div>
 
-                    <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
-                      {composeRequestUrl(common.baseUrl, request.path)}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </article>
-        ) : null}
+                      <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
+                        {composeRequestUrl(common.baseUrl, request.path)}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        </article>
       </div>
     </section>
   );
@@ -454,21 +491,25 @@ function EndpointResultsSection({
 
 type ResultProps = {
   scanResult: ScanResult;
-  selectedEndpointIndex: EndpointReportSelection;
+  selectedReport: ReportSelection;
 };
 
-export function ReportResultPanel({ scanResult, selectedEndpointIndex }: ResultProps) {
-  const hasFocusedEndpoint =
-    selectedEndpointIndex !== "all" && Boolean(scanResult.endpoint_scans?.length);
+export function ReportResultPanel({ scanResult, selectedReport }: ResultProps) {
+  const stackScan = scanResult.stack_scan;
+  const endpointScans = scanResult.endpoint_scans;
+  const shouldShowStack =
+    (selectedReport.type === "all" || selectedReport.type === "stack") && Boolean(stackScan);
+  const shouldShowEndpoints =
+    (selectedReport.type === "all" || selectedReport.type === "endpoint") && Boolean(endpointScans);
+  const selectedEndpointIndex: EndpointReportSelection =
+    selectedReport.type === "endpoint" ? selectedReport.index : "all";
 
   return (
     <div className="space-y-6">
-      {!hasFocusedEndpoint && scanResult.stack_scan ? (
-        <StackResultSection data={scanResult.stack_scan} />
-      ) : null}
-      {scanResult.endpoint_scans ? (
+      {shouldShowStack && stackScan ? <StackResultSection data={stackScan} /> : null}
+      {shouldShowEndpoints && endpointScans ? (
         <EndpointResultsSection
-          scans={scanResult.endpoint_scans}
+          scans={endpointScans}
           selectedEndpointIndex={selectedEndpointIndex}
         />
       ) : null}
