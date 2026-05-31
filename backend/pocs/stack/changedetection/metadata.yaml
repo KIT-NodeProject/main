@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2026-35490
+    stack_name: changedetection
+    entrypoint: CVE-2026-35490.py
+    description: changedetection.io backup route authentication bypass detection PoC

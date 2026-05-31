@@ -2,14 +2,14 @@ pocs:
   - name: CVE-2017-10271
     stack_name: weblogic
     entrypoint: CVE-2017-10271.py
-    description: WebLogic test PoC
+    description: Oracle WebLogic Server unauthenticated server compromise PoC
 
   - name: CVE-2020-14882
     stack_name: weblogic
     entrypoint: CVE-2020-14882.py
-    description: WebLogic test PoC
+    description: Oracle WebLogic Server Console unauthenticated server compromise PoC
 
   - name: CVE-2018-2894
     stack_name: weblogic
     entrypoint: CVE-2018-2894.py
-    description: WebLogic test PoC
+    description: Oracle WebLogic Server WLS Web Services unauthenticated server compromise PoC

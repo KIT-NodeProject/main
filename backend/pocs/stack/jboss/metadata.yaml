@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2017-12149
+    stack_name: jboss
+    entrypoint: CVE-2017-12149.py
+    description: JBoss HTTP Invoker unauthenticated Java deserialization exposure detection PoC

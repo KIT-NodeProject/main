@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2023-51467
+    stack_name: ofbiz
+    entrypoint: CVE-2023-51467.py
+    description: Apache OFBiz WebTools authentication bypass RCE risk detection PoC

@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2021-3129
+    stack_name: laravel
+    entrypoint: CVE-2021-3129.py
+    description: Laravel Ignition debug endpoint exposure RCE risk detection PoC

@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2024-36401
+    stack_name: geoserver
+    entrypoint: CVE-2024-36401.py
+    description: GeoServer OGC WFS service exposure and vulnerable version detection PoC

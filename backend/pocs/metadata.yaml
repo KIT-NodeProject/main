@@ -6,6 +6,22 @@ supported_stacks:
   - weblogic
   - spring
   - next
+  - nginx
+  - axios
+  - siyuan
+  - zitadel
+  - jboss
+  - laravel
+  - nacos
+  - strapi
+  - apache_APISIX
+  - grafana
+  - confluence
+  - glances
+  - jira
+  - changedetection
+  - geoserver
+  - ofbiz
   
 categories:
   - authentication_failures

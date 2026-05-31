@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2026-40175
+    stack_name: axios
+    entrypoint: CVE-2026-40175.py
+    description: Axios CRLF header validation bypass detection PoC

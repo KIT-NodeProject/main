@@ -5,6 +5,22 @@ const STACK_OPTIONS = [
   { value: "next", label: "Next.js" },
   { value: "weblogic", label: "WebLogic" },
   { value: "spring", label: "Spring" },
+  { value: "nginx", label: "Nginx"},
+  { value: "axios", label: "Axios"},
+  { value: "arcane", label: "Arcane"},
+  { value: "zitadel", label: "Zitadel"},
+  { value: "strapi", label: "Strapi"},
+  { value: "apisix", label: "Apisix"},
+  { value: "nacos", label: "Nacos"},
+  { value: "grafana", label: "Grafana"},
+  { value: "laravel", label: "Laravel"},
+  { value: "jboss", label: "Jboss"},
+  { value: "confluence", label: "Confluence"},
+  { value: "jira", label: "Jira"},
+  { value: "changedetection", label: "Changedetection"},
+  { value: "glances", label: "Glances"},
+  { value: "ofbiz", label: "Ofbiz"},
+  { value: "geoserver", label: "Geoserver"},
 ] as const;
 
 type Props = {
