@@ -1,4 +1,0 @@
-name: react_next_test
-stack_name: react
-entrypoint: runner.py
-description: Simple React test PoC
