@@ -1,0 +1,42 @@
+category: security_misconfiguration
+display_name: Security Misconfiguration
+description: Security misconfiguration related endpoint tests
+pocs:
+  - name: missing_security_headers
+    entrypoint: missing_security_headers.py
+    entrypoint_type: public
+    method: GET
+    requires_query_params: false
+    requires_body_params: false
+
+  - name: swagger_ui_exposed
+    entrypoint: swagger_ui_exposed.py
+    entrypoint_type: public
+    method: GET
+    requires_query_params: false
+    requires_body_params: false
+
+  - name: backup_file_exposed
+    entrypoint: backup_file_exposed.py
+    entrypoint_type: public
+    method: GET
+    requires_query_params: false
+    requires_body_params: false
+
+# - name: admin_interface_exposed
+#   entrypoint: admin_interface_exposed.py
+#   entrypoint_type: public
+#   method: GET
+#   requires_query_params: false
+#   requires_body_params: false
+
+# - name: dangerous_http_methods_enabled
+#   entrypoint: dangerous_http_methods_enabled.py
+#   entrypoint_type: public
+#   methods:
+#     - OPTIONS
+#     - TRACE
+#     - PUT
+#     - DELETE
+#   requires_query_params: false
+#   requires_body_params: false

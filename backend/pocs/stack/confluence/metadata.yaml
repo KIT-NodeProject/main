@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2022-26134
+    stack_name: confluence
+    entrypoint: CVE-2022-26134.py
+    description: Confluence OGNL injection response header marker detection PoC

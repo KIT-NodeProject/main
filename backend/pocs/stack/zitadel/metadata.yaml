@@ -1,0 +1,5 @@
+pocs:
+- name: CVE-2026-29191
+  stack_name: zitadel
+  entrypoint: CVE-2026-29191.py
+  description: ZITADEL unauthenticated saml-post reflected XSS detection PoC

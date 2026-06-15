@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2019-11581
+    stack_name: jira
+    entrypoint: CVE-2019-11581.py
+    description: Jira Contact Administrators server-side template injection RCE risk detection PoC

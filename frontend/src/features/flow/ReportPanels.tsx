@@ -1,0 +1,518 @@
+import { composeRequestUrl, methodTone } from "../../lib/request";
+import type {
+  CommonConfig,
+  EndpointRequestDraft,
+  EndpointScanResponse,
+  ScanResult,
+  ScanResultItem,
+  StackConfig,
+  StackScanResponse,
+} from "../../types/scan";
+
+export type ReportSelection =
+  | { type: "all" }
+  | { type: "stack" }
+  | { type: "endpoint"; index: number };
+
+type EndpointReportSelection = "all" | number;
+
+type ConfigProps = {
+  common: CommonConfig;
+  endpointRequests: EndpointRequestDraft[];
+  endpointScans?: EndpointScanResponse[];
+  selectedReport: ReportSelection;
+  stack: StackConfig;
+  stackScan?: StackScanResponse;
+  onSelectReport: (selection: ReportSelection) => void;
+};
+
+function reportBadge(scan?: { results: ScanResultItem[] }) {
+  if (!scan) {
+    return {
+      label: "결과 대기",
+      className: "border-slate-200 bg-white text-slate-500",
+    };
+  }
+
+  const vulnerableCount = scan.results.filter((result) => result.vulnerable).length;
+
+  if (vulnerableCount > 0) {
+    return {
+      label: `취약 ${vulnerableCount}`,
+      className: "border-rose-200 bg-rose-50 text-rose-700",
+    };
+  }
+
+  if (scan.results.length > 0) {
+    return {
+      label: `결과 ${scan.results.length}`,
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    };
+  }
+
+  return {
+    label: "결과 없음",
+    className: "border-slate-200 bg-white text-slate-500",
+  };
+}
+
+export function ReportConfigPanel({
+  common,
+  endpointRequests,
+  endpointScans,
+  selectedReport,
+  stack,
+  stackScan,
+  onSelectReport,
+}: ConfigProps) {
+  const configuredRequests = endpointRequests.filter((request) => request.path.trim());
+  const endpointScanCount = endpointScans?.length ?? 0;
+  const stackLabel = stack.stackName || stackScan?.stack_name || "미입력";
+  const hasStackTarget = Boolean(stack.stackName.trim() || stackScan);
+  const reportCount = (stackScan ? 1 : 0) + endpointScanCount;
+  const isAllSelected = selectedReport.type === "all";
+  const isStackSelected = selectedReport.type === "stack";
+  const stackBadge = reportBadge(stackScan);
+
+  return (
+    <section className="rounded-[28px] border border-slate-200 bg-white/88 p-6">
+      <div className="border-b border-slate-200 pb-5">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Configured Targets</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950">설정 내용</h2>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
+          <p className="text-sm text-slate-600">Base URL</p>
+          <p className="mt-2 font-semibold text-slate-950">{common.baseUrl}</p>
+          <p className="mt-2 text-sm text-slate-500">
+            로그인: {common.loginRequired ? common.authMode.toUpperCase() : "비로그인"}
+          </p>
+        </article>
+
+        <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">검사 결과</p>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+              {reportCount}개 리포트
+            </span>
+          </div>
+          <div className="mt-4 space-y-3">
+            <button
+              type="button"
+              onClick={() => onSelectReport({ type: "all" })}
+              aria-pressed={isAllSelected}
+              className={[
+                "w-full rounded-2xl border px-4 py-4 text-left transition",
+                isAllSelected
+                  ? "border-slate-950 bg-slate-950 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+              ].join(" ")}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="font-semibold">전체 결과</span>
+                <span
+                  className={[
+                    "rounded-full border px-3 py-1 text-xs",
+                    isAllSelected
+                      ? "border-white/20 bg-white/10 text-white"
+                      : "border-slate-200 bg-slate-50 text-slate-600",
+                  ].join(" ")}
+                >
+                  모든 리포트
+                </span>
+              </div>
+            </button>
+
+            {hasStackTarget ? (
+              <button
+                type="button"
+                onClick={() => onSelectReport({ type: "stack" })}
+                aria-pressed={isStackSelected}
+                className={[
+                  "w-full rounded-2xl border px-4 py-4 text-left transition",
+                  isStackSelected
+                    ? "border-slate-950 bg-white shadow-sm ring-2 ring-slate-950/10"
+                    : "border-slate-200 bg-white hover:border-slate-300",
+                ].join(" ")}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">사용 기술 / 프레임 워크</p>
+                    <p className="mt-2 text-sm text-slate-600">{stackLabel}</p>
+                  </div>
+                  <span className={["rounded-full border px-3 py-1 text-xs", stackBadge.className].join(" ")}>
+                    {stackBadge.label}
+                  </span>
+                </div>
+              </button>
+            ) : null}
+
+            {configuredRequests.length > 0 ? (
+              <div className="space-y-3 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+                  <p className="text-sm text-slate-600">엔드포인트 요청</p>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+                    {endpointScanCount}개 리포트
+                  </span>
+                </div>
+                {configuredRequests.map((request, index) => {
+                  const isEndpointSelected =
+                    selectedReport.type === "endpoint" && selectedReport.index === index;
+                  const badge = reportBadge(endpointScans?.[index]);
+
+                  return (
+                    <button
+                      type="button"
+                      key={request.id}
+                      onClick={() => onSelectReport({ type: "endpoint", index })}
+                      aria-pressed={isEndpointSelected}
+                      className={[
+                        "w-full rounded-2xl border px-4 py-4 text-left transition",
+                        isEndpointSelected
+                          ? "border-slate-950 bg-white shadow-sm ring-2 ring-slate-950/10"
+                          : "border-slate-200 bg-white hover:border-slate-300",
+                      ].join(" ")}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span
+                            className={[
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                              isEndpointSelected
+                                ? "bg-slate-950 text-white ring-slate-950"
+                                : "bg-slate-100 text-slate-700 ring-slate-200",
+                            ].join(" ")}
+                          >
+                            {index + 1}
+                          </span>
+                          <span
+                            className={[
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+                              methodTone(request.method),
+                            ].join(" ")}
+                          >
+                            {request.method}
+                          </span>
+                          <h3 className="font-semibold text-slate-950">{request.name}</h3>
+                        </div>
+                        <span className={["rounded-full border px-3 py-1 text-xs", badge.className].join(" ")}>
+                          {badge.label}
+                        </span>
+                      </div>
+
+                      <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700">
+                        {composeRequestUrl(common.baseUrl, request.path)}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function resultTone(result: ScanResultItem) {
+  const normalizedStatus = result.status.toLowerCase();
+  const normalizedEvidence = result.evidence.toLowerCase();
+
+  if (
+    normalizedEvidence.includes("connection refused") ||
+    normalizedEvidence.includes("failed to establish a new connection") ||
+    normalizedEvidence.includes("max retries exceeded") ||
+    normalizedEvidence.includes("connectionpool") ||
+    normalizedStatus === "timeout"
+  ) {
+    return {
+      badge: "대상 접속 실패",
+      badgeClass: "bg-amber-100 text-amber-800 ring-amber-200",
+      summary: "대상 서비스에 연결되지 않아 테스트를 끝까지 진행하지 못했습니다.",
+      cardClass: "border-amber-200 bg-amber-50/60",
+    };
+  }
+
+  if (result.vulnerable) {
+    return {
+      badge: "취약 징후 발견",
+      badgeClass: "bg-rose-100 text-rose-800 ring-rose-200",
+      summary: "현재 응답 기준으로 추가 확인이 필요한 징후가 감지되었습니다.",
+      cardClass: "border-rose-200 bg-rose-50/60",
+    };
+  }
+
+  if (normalizedStatus === "completed" || normalizedStatus === "success") {
+    return {
+      badge: "검사 완료",
+      badgeClass: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+      summary: "현재 조건에서는 요청과 결과 수집이 정상적으로 끝났습니다.",
+      cardClass: "border-slate-200 bg-slate-50/80",
+    };
+  }
+
+  if (normalizedStatus === "error") {
+    return {
+      badge: "추가 확인 필요",
+      badgeClass: "bg-amber-100 text-amber-800 ring-amber-200",
+      summary: "테스트가 완전히 끝나지 않아 확인이 더 필요합니다.",
+      cardClass: "border-amber-200 bg-amber-50/60",
+    };
+  }
+
+  return {
+    badge: "검사 완료",
+    badgeClass: "bg-sky-100 text-sky-800 ring-sky-200",
+    summary: "검사 응답이 수집되었습니다.",
+    cardClass: "border-slate-200 bg-slate-50/80",
+  };
+}
+
+function getEndpointSummary(data: EndpointScanResponse) {
+  const endpoint = data.endpoints?.[0];
+
+  if (!endpoint) {
+    return {
+      title: "엔드포인트 정보 없음",
+      subtitle: "응답에 엔드포인트 정보가 포함되지 않았습니다.",
+    };
+  }
+
+  return {
+    title: `${endpoint.method ?? "GET"} ${endpoint.path}`,
+    subtitle: `Endpoint ID: ${endpoint.id} · Type: ${endpoint.endpoint_type}`,
+  };
+}
+
+function ResultItemCard({ result }: { result: ScanResultItem }) {
+  const tone = resultTone(result);
+
+  return (
+    <article className={`rounded-3xl border p-5 ${tone.cardClass}`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <span
+          className={[
+            "rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1",
+            tone.badgeClass,
+          ].join(" ")}
+        >
+          {tone.badge}
+        </span>
+        <h4 className="font-semibold text-slate-950">{result.poc_name}</h4>
+      </div>
+
+      <p className="mt-3 text-sm font-medium text-slate-800">{tone.summary}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{result.description || "설명 없음"}</p>
+
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs uppercase tracking-[0.24em] text-slate-500">세부 정보</p>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+          {result.evidence || "추가 정보가 없습니다."}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function SectionShell({
+  title,
+  subtitle,
+  meta,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  meta?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[28px] border border-slate-200 bg-white/88 p-6">
+      <div className="border-b border-slate-200 pb-5">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Backend Result</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950">{title}</h2>
+        {subtitle ? <p className="mt-2 text-sm text-slate-600">{subtitle}</p> : null}
+        {meta ? <div className="mt-4 flex flex-wrap gap-3">{meta}</div> : null}
+      </div>
+
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function StackResultSection({ data }: { data: StackScanResponse }) {
+  return (
+    <SectionShell
+      title="사용 기술 / 프레임 워크 검사 결과"
+      subtitle={`${data.stack_name} 기준으로 실행된 결과입니다.`}
+      meta={
+        <>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            Scan ID: {data.scan_id}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            상태: {data.status === "Completed" ? "검사 완료" : data.status}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            Findings: {data.results.length}
+          </span>
+        </>
+      }
+    >
+      {data.results.length === 0 ? (
+        <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-600">
+          실행 결과가 없습니다.
+        </article>
+      ) : (
+        <div className="space-y-4">
+          {data.results.map((result) => (
+            <ResultItemCard
+              key={`${data.scan_id}-${result.poc_name}-${result.status}`}
+              result={result}
+            />
+          ))}
+        </div>
+      )}
+    </SectionShell>
+  );
+}
+
+function EndpointResultCard({
+  data,
+  index,
+}: {
+  data: EndpointScanResponse;
+  index: number;
+}) {
+  const summary = getEndpointSummary(data);
+
+  return (
+    <article className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
+              {index + 1}
+            </span>
+            <h3 className="text-lg font-semibold text-slate-950">{summary.title}</h3>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">{summary.subtitle}</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+            Scan ID: {data.scan_id}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+            상태: {data.status === "Completed" ? "검사 완료" : data.status}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+            Findings: {data.results.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        {data.results.length === 0 ? (
+          <article className="rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+            이 엔드포인트에 대한 실행 결과가 없습니다.
+          </article>
+        ) : (
+          <div className="space-y-4">
+            {data.results.map((result) => (
+              <ResultItemCard
+                key={`${data.scan_id}-${result.poc_name}-${result.status}-${result.endpoint_id}`}
+                result={result}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function EndpointResultsSection({
+  scans,
+  selectedEndpointIndex,
+}: {
+  scans: EndpointScanResponse[];
+  selectedEndpointIndex: EndpointReportSelection;
+}) {
+  const selectedScan =
+    typeof selectedEndpointIndex === "number" ? scans[selectedEndpointIndex] : undefined;
+  const visibleScans =
+    selectedEndpointIndex === "all"
+      ? scans.map((scan, index) => ({ scan, index }))
+      : selectedScan
+        ? [{ scan: selectedScan, index: selectedEndpointIndex }]
+        : [];
+  const selectedSummary = selectedScan ? getEndpointSummary(selectedScan) : undefined;
+
+  return (
+    <SectionShell
+      title="엔드포인트 검사 결과"
+      subtitle={
+        selectedEndpointIndex === "all"
+          ? "각 요청별로 생성된 개별 리포트입니다."
+          : selectedSummary
+            ? `${selectedSummary.title} 결과만 표시 중입니다.`
+            : "선택한 엔드포인트 결과를 찾지 못했습니다."
+      }
+      meta={
+        <>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+            Endpoint Reports: {selectedEndpointIndex === "all" ? scans.length : visibleScans.length}
+            {selectedEndpointIndex !== "all" ? ` / ${scans.length}` : ""}
+          </span>
+          {selectedEndpointIndex !== "all" ? (
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700">
+              선택: {Number(selectedEndpointIndex) + 1}
+            </span>
+          ) : null}
+        </>
+      }
+    >
+      {visibleScans.length === 0 ? (
+        <article className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-600">
+          엔드포인트 검사 결과가 없습니다.
+        </article>
+      ) : (
+        <div className="space-y-5">
+          {visibleScans.map(({ scan, index }) => (
+            <EndpointResultCard key={scan.scan_id} data={scan} index={index} />
+          ))}
+        </div>
+      )}
+    </SectionShell>
+  );
+}
+
+type ResultProps = {
+  scanResult: ScanResult;
+  selectedReport: ReportSelection;
+};
+
+export function ReportResultPanel({ scanResult, selectedReport }: ResultProps) {
+  const stackScan = scanResult.stack_scan;
+  const endpointScans = scanResult.endpoint_scans;
+  const shouldShowStack =
+    (selectedReport.type === "all" || selectedReport.type === "stack") && Boolean(stackScan);
+  const shouldShowEndpoints =
+    (selectedReport.type === "all" || selectedReport.type === "endpoint") && Boolean(endpointScans);
+  const selectedEndpointIndex: EndpointReportSelection =
+    selectedReport.type === "endpoint" ? selectedReport.index : "all";
+
+  return (
+    <div className="space-y-6">
+      {shouldShowStack && stackScan ? <StackResultSection data={stackScan} /> : null}
+      {shouldShowEndpoints && endpointScans ? (
+        <EndpointResultsSection
+          scans={endpointScans}
+          selectedEndpointIndex={selectedEndpointIndex}
+        />
+      ) : null}
+    </div>
+  );
+}

@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2021-43798
+    stack_name: grafana
+    entrypoint: CVE-2021-43798.py
+    description: Grafana plugin asset path traversal local file read detection PoC

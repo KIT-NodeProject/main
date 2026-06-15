@@ -1,0 +1,10 @@
+pocs:
+  - name: CVE-2026-29183
+    stack_name: siyuan
+    entrypoint: CVE-2026-29183.py
+    description: SiYuan dynamic icon API unauthenticated SVG injection reflected XSS detection PoC
+
+  - name: CVE-2026-34605
+    stack_name: siyuan
+    entrypoint: CVE-2026-34605.py
+    description: SiYuan dynamic icon API SVG namespace sanitization bypass reflected XSS detection PoC

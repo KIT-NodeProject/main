@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2021-29441
+    stack_name: nacos
+    entrypoint: CVE-2021-29441.py
+    description: Nacos User-Agent authentication bypass configuration creation detection PoC

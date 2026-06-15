@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2026-34839
+    stack_name: glances
+    entrypoint: CVE-2026-34839.py
+    description: Glances REST API permissive CORS system information disclosure detection PoC

@@ -1,0 +1,5 @@
+pocs:  
+  - name: CVE-2025-53092
+    stack_name: strapi
+    entrypoint: CVE-2025-53092.py
+    description: Strapi default CORS origin reflection sensitive API exposure detection PoC

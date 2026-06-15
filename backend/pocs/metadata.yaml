@@ -1,0 +1,31 @@
+name: web_poc_scanner
+version: 1.0.0
+description: Web vulnerability scanning PoC set
+supported_stacks:
+  - react
+  - weblogic
+  - spring
+  - next
+  - nginx
+  - axios
+  - siyuan
+  - zitadel
+  - jboss
+  - laravel
+  - nacos
+  - strapi
+  - apache_APISIX
+  - grafana
+  - confluence
+  - glances
+  - jira
+  - changedetection
+  - geoserver
+  - ofbiz
+  
+categories:
+  - authentication_failures
+  - broken_access_control
+  - information_disclosure
+  - injection
+  - security_misconfiguration

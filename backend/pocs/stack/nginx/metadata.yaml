@@ -1,0 +1,10 @@
+pocs:
+  - name: CVE-2017-7529
+    stack_name: nginx
+    entrypoint: CVE-2017-7529.py
+    description: NGINX cached response range filter sensitive information disclosure detection PoC
+  
+  - name: CVE-2026-42945
+    stack_name: nginx
+    entrypoint: CVE-2026-42945.py
+    description: 조작된 요청을 전송하여 비정상 연결 종료 여부를 확인하는 NGINX rewrite 모듈 힙 버퍼 오버플로우 취약점 점검 PoC

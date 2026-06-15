@@ -1,0 +1,5 @@
+pocs:
+  - name: CVE-2021-45232
+    stack_name: apisix
+    entrypoint: CVE-2021-45232.py
+    description: Apache APISIX Dashboard Manager API authentication bypass configuration export detection PoC
